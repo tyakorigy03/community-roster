@@ -27,6 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 function AttachmentItem({ attachment }) {
   const getFileIcon = (type) => {
     if (type?.includes('pdf')) return '📄';
@@ -68,6 +69,7 @@ function AttachmentItem({ attachment }) {
 }
 
 function ClientsPage() {
+  const { currentStaff: user } = useUser();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,8 +93,10 @@ function ClientsPage() {
 
   // Fetch clients from database
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (user?.tenant_id) {
+      fetchClients();
+    }
+  }, [user?.tenant_id]);
 
   const fetchClients = async () => {
     try {
@@ -100,6 +104,7 @@ function ClientsPage() {
       const { data, error } = await supabase
         .from("clients")
         .select("* ,file:documents(file_url,file_name:document_name)")
+        .eq("tenant_id", user.tenant_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -205,7 +210,8 @@ function ClientsPage() {
       const { error } = await supabase
         .from("clients")
         .delete()
-        .eq("id", selectedClient.id);
+        .eq("id", selectedClient.id)
+        .eq("tenant_id", user.tenant_id);
 
       if (error) throw error;
 

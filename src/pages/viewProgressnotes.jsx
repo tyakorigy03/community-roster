@@ -33,6 +33,7 @@ import {
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext';
 import { generateProgressNotePDF } from '../utils/progressNotePdf';
 
 // Helper functions
@@ -172,6 +173,7 @@ function EmailModal({
         .from("government_report_emails")
         .select("*")
         .eq("report_type", "progress_note")
+        .eq("tenant_id", noteData.tenant_id)
         .order("department_name");
 
       if (!error) setEmails(data || []);
@@ -203,6 +205,7 @@ function EmailModal({
             department_name: form.department_name,
             email_address: form.email_address,
             report_type: "progress_note",
+            tenant_id: noteData.tenant_id,
           });
       }
 
@@ -230,7 +233,8 @@ function EmailModal({
       await supabase
         .from("government_report_emails")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", noteData.tenant_id);
 
       toast.success('Email deleted successfully');
       fetchGovernmentEmails();
@@ -455,6 +459,7 @@ function EmailModal({
 export default function ProgressNoteDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStaff: user } = useUser();
   const [loading, setLoading] = useState(true);
   const [note, setNote] = useState(null);
   const [attachments, setAttachments] = useState([]);
@@ -464,10 +469,10 @@ export default function ProgressNoteDetail() {
   const [exportingPDF, setExportingPDF] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (id && user?.tenant_id) {
       fetchNoteData();
     }
-  }, [id]);
+  }, [id, user?.tenant_id]);
 
   const fetchNoteData = async () => {
     try {
@@ -484,6 +489,7 @@ export default function ProgressNoteDetail() {
           shift:shift_id(shift_date, start_time, end_time, status)
         `)
         .eq('id', id)
+        .eq('tenant_id', user.tenant_id)
         .single();
 
       if (noteError) throw noteError;
@@ -519,17 +525,20 @@ export default function ProgressNoteDetail() {
       await supabase
         .from('progress_note_attachments')
         .delete()
-        .eq('progress_note_id', id);
+        .eq('progress_note_id', id)
+        .eq('tenant_id', user.tenant_id);
 
       await supabase
         .from('progress_note_comments')
         .delete()
-        .eq('progress_note_id', id);
+        .eq('progress_note_id', id)
+        .eq('tenant_id', user.tenant_id);
 
       const { error } = await supabase
         .from('progress_notes')
         .delete()
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', user.tenant_id);
 
       if (error) throw error;
 
@@ -576,7 +585,8 @@ export default function ProgressNoteDetail() {
       const { error } = await supabase
         .from('progress_notes')
         .update(updateData)
-        .eq('id', id);
+        .eq('id', id)
+        .eq('tenant_id', user.tenant_id);
 
       if (error) throw error;
 

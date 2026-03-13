@@ -20,11 +20,13 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext';
 import ShiftDetailsModal from '../components/ShiftDetailsModal';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const ShiftHistory = () => {
+    const { currentStaff } = useUser();
     const [shifts, setShifts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
@@ -46,7 +48,9 @@ const ShiftHistory = () => {
     const [staffList, setStaffList] = useState([]);
 
     useEffect(() => {
-        fetchFiltersData();
+        if (currentStaff?.tenant_id) {
+            fetchFiltersData();
+        }
         const handleResize = () => {
             if (window.innerWidth < 1024) setShowFilters(false);
         };
@@ -55,13 +59,23 @@ const ShiftHistory = () => {
     }, []);
 
     useEffect(() => {
-        fetchShifts();
-    }, [currentPage, filters]);
+        if (currentStaff?.tenant_id) {
+            fetchShifts();
+        }
+    }, [currentPage, filters, currentStaff]);
 
     const fetchFiltersData = async () => {
         try {
-            const { data: clientsData } = await supabase.from('clients').select('id, first_name, last_name, city, state').order('first_name');
-            const { data: staffData } = await supabase.from('staff').select('id, name').order('name');
+            const { data: clientsData } = await supabase
+                .from('clients')
+                .select('id, first_name, last_name, city, state')
+                .eq('tenant_id', currentStaff.tenant_id)
+                .order('first_name');
+            const { data: staffData } = await supabase
+                .from('staff')
+                .select('id, name')
+                .eq('tenant_id', currentStaff.tenant_id)
+                .order('name');
             setClients(clientsData || []);
             setStaffList(staffData || []);
         } catch (error) {
@@ -94,6 +108,7 @@ const ShiftHistory = () => {
                     )
                 `, { count: 'exact' })
                 .lte('shift_date', today)
+                .eq('tenant_id', currentStaff.tenant_id)
                 .order('shift_date', { ascending: false })
                 .order('start_time', { ascending: false });
 
@@ -306,14 +321,13 @@ const ShiftHistory = () => {
                                             <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Subject/Client</th>
                                             <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Operator</th>
                                             <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Duration</th>
-                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Verification</th>
                                             <th className="text-center p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Sync Status</th>
                                             <th className="p-4"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
                                         {shifts.map((s) => (
-                                            <tr key={s.id} className="hover:bg-slate-50/50 transition-all cursor-pointer group" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
+                                            <tr key={s.id} className="hover:bg-slate-50/80 even:bg-slate-50/40 transition-all cursor-pointer group" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
                                                 <td className="p-4">
                                                     <div className="font-black text-slate-900 text-[11px] leading-tight">{s.shift_date}</div>
                                                     <div className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{s.start_time || '--:--'} - {s.end_time || '--:--'}</div>
@@ -333,13 +347,6 @@ const ShiftHistory = () => {
                                                         <Clock size={12} className="text-blue-500" /> {s.duration}
                                                     </div>
                                                 </td>
-                                                <td className="p-4">
-                                                    <div className="flex gap-2">
-                                                        {s.clock_in_photo_url && <Camera size={14} className="text-emerald-500" title="Photo Evidence" />}
-                                                        {(s.clock_in_location || s.clock_out_location) && <MapPin size={14} className="text-blue-500" title="GPS Evidence" />}
-                                                        {s.notes && <FileText size={14} className="text-slate-400" title="Field Notes" />}
-                                                    </div>
-                                                </td>
                                                 <td className="p-4 text-center">
                                                     <CompactBadge status={s.execution_status} approved={s.approved} />
                                                 </td>
@@ -355,7 +362,7 @@ const ShiftHistory = () => {
                             {/* Mobile Tactical Grid */}
                             <div className="lg:hidden divide-y divide-slate-50">
                                 {shifts.map((s) => (
-                                    <div key={s.id} className="p-5 active:bg-slate-50 transition-colors" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
+                                    <div key={s.id} className="p-5 active:bg-slate-50 even:bg-slate-50/30 transition-colors" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
                                         <div className="flex justify-between items-start mb-3">
                                             <div>
                                                 <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">{s.shift_date}</div>
@@ -424,8 +431,14 @@ const ShiftHistory = () => {
                     try {
                         const { error } = await supabase
                             .from('staff_shifts')
-                            .update({ approved: true, updated_at: new Date().toISOString() })
-                            .eq('shift_id', id);
+                            .update({ 
+                                approved: true, 
+                                status: 'approved',
+                                updated_at: new Date().toISOString() 
+                            })
+                            .eq('shift_id', id)
+                            .eq('tenant_id', currentStaff.tenant_id);
+                            
                         if (error) throw error;
                         toast.success('Shift Tactical Approval Secured');
                         fetchShifts();

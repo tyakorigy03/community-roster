@@ -130,6 +130,7 @@ function EditIncident() {
         .from("clients")
         .select("id, first_name, last_name, ndis_number")
         .eq("is_active", true)
+        .eq("tenant_id", user.tenant_id)
         .order("first_name", { ascending: true });
 
       if (clientsError) throw clientsError;
@@ -141,6 +142,7 @@ function EditIncident() {
         .from("hierarchy")
         .select("id, name, code")
         .eq("is_active", true)
+        .eq("tenant_id", user.tenant_id)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
 
@@ -152,6 +154,7 @@ function EditIncident() {
         .from("incident_types")
         .select("*")
         .eq("is_active", true)
+        .eq("tenant_id", user.tenant_id)
         .order("sort_order", { ascending: true });
 
       if (typesError) throw typesError;
@@ -162,6 +165,7 @@ function EditIncident() {
         .from("emergency_assistance_types")
         .select("*")
         .eq("is_active", true)
+        .eq("tenant_id", user.tenant_id)
         .order("sort_order", { ascending: true });
 
       if (emergencyError) throw emergencyError;
@@ -173,6 +177,7 @@ function EditIncident() {
           .from("staff")
           .select("id, name, email, role")
           .eq("is_active", true)
+          .eq("tenant_id", user.tenant_id)
           .order("name", { ascending: true });
 
         if (staffError) throw staffError;
@@ -197,6 +202,7 @@ function EditIncident() {
         .from("incidents")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", user.tenant_id)
         .single();
 
       if (incidentError) throw incidentError;
@@ -418,7 +424,8 @@ function EditIncident() {
       const { error } = await supabase
         .from("incident_attachments")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", user.tenant_id);
 
       if (error) throw error;
 
@@ -519,6 +526,7 @@ function EditIncident() {
           updated_at: new Date().toISOString()
         })
         .eq("id", id)
+        .eq("tenant_id", user.tenant_id)
         .select()
         .single();
 
@@ -534,7 +542,8 @@ function EditIncident() {
         const incidentTypePromises = selectedIncidentTypes.map(typeId =>
           supabase.from("incident_type_relations").insert([{
             incident_id: id,
-            incident_type_id: typeId
+            incident_type_id: typeId,
+            tenant_id: user.tenant_id
           }])
         );
 
@@ -550,7 +559,8 @@ function EditIncident() {
           return supabase.from("incident_emergency_assistance").insert([{
             incident_id: id,
             assistance_type_id: typeId,
-            details: emergencyType?.name === 'Others' ? otherEmergencyDetails : null
+            details: emergencyType?.name === 'Others' ? otherEmergencyDetails : null,
+            tenant_id: user.tenant_id
           }]);
         });
 
@@ -567,7 +577,8 @@ function EditIncident() {
             file_url: attachment.url,
             file_type: attachment.type,
             file_size: attachment.size,
-            uploaded_by: user?.id
+            uploaded_by: user?.id,
+            tenant_id: user.tenant_id
           }])
         );
 

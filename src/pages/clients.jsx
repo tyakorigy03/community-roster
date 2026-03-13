@@ -27,6 +27,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 function AttachmentItem({ attachment }) {
   const getFileIcon = (type) => {
     if (type?.includes('pdf')) return '📄';
@@ -68,6 +69,7 @@ function AttachmentItem({ attachment }) {
 }
 
 function ClientsPage() {
+  const { currentStaff } = useUser();
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -76,6 +78,7 @@ function ClientsPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [viewMode, setViewMode] = useState("list"); // 'grid' or 'list'
+  const [expandedClientId, setExpandedClientId] = useState(null);
   const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' });
 
   // Filter states
@@ -91,8 +94,10 @@ function ClientsPage() {
 
   // Fetch clients from database
   useEffect(() => {
-    fetchClients();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchClients();
+    }
+  }, [currentStaff]);
 
   const fetchClients = async () => {
     try {
@@ -100,6 +105,7 @@ function ClientsPage() {
       const { data, error } = await supabase
         .from("clients")
         .select("* ,file:documents(file_url,file_name:document_name)")
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -205,7 +211,8 @@ function ClientsPage() {
       const { error } = await supabase
         .from("clients")
         .delete()
-        .eq("id", selectedClient.id);
+        .eq("id", selectedClient.id)
+        .eq("tenant_id", currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -576,56 +583,115 @@ if (loading) {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-100">
                     <th className="px-6 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer" onClick={() => handleSort('name')}>Registration</th>
-                    <th className="px-6 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer" onClick={() => handleSort('ndis_number')}>NDIS & Contact</th>
+                    <th className="px-6 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer hidden lg:table-cell" onClick={() => handleSort('ndis_number')}>NDIS & Contact</th>
                     <th className="px-6 py-4 text-left text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] cursor-pointer" onClick={() => handleSort('is_active')}>Status</th>
-                    <th className="px-6 py-4 text-right text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Actions</th>
+                    <th className="px-6 py-4 text-right text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] hidden lg:table-cell">Actions</th>
+                    <th className="px-4 py-4 text-right text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] lg:hidden w-10"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {filteredAndSortedClients.map((client) => (
-                    <tr
-                      key={client.id}
-                      onClick={() => {
-                        setSelectedClient(client);
-                        setShowInfoModal(true);
-                      }}
-                      className="hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {client.profile_photo_url ? (
-                            <img src={client.profile_photo_url} className="w-9 h-9 rounded-xl object-cover" alt="" />
-                          ) : (
-                            <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-[10px] uppercase">
-                              {client.first_name[0]}{client.last_name[0]}
+                  {filteredAndSortedClients.map((client) => {
+                    const isExpanded = expandedClientId === client.id;
+                    return (
+                      <React.Fragment key={client.id}>
+                        <tr
+                          onClick={() => {
+                            if (window.innerWidth < 1024) {
+                              setExpandedClientId(isExpanded ? null : client.id);
+                            } else {
+                              setSelectedClient(client);
+                              setShowInfoModal(true);
+                            }
+                          }}
+                          className={`hover:bg-slate-50/80 even:bg-slate-50/30 transition-all cursor-pointer group ${isExpanded ? 'bg-blue-50/50' : ''}`}
+                        >
+                          <td className="px-4 lg:px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              {client.profile_photo_url ? (
+                                <img src={client.profile_photo_url} className="w-9 h-9 rounded-xl object-cover shadow-sm" alt="" />
+                              ) : (
+                                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-[10px] uppercase shadow-sm">
+                                  {client.first_name[0]}{client.last_name[0]}
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <p className="text-[11px] font-black text-slate-900 uppercase truncate">{client.first_name} {client.last_name}</p>
+                                <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Added {formatDate(client.created_at)}</p>
+                                {/* Mobile Detail Preview */}
+                                <div className="lg:hidden mt-0.5">
+                                  <p className="text-[8px] font-bold text-slate-400 truncate">{client.ndis_number || "NO NDIS"}</p>
+                                </div>
+                              </div>
                             </div>
-                          )}
-                          <div>
-                            <p className="text-[11px] font-black text-slate-900 uppercase truncate">{client.first_name} {client.last_name}</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase mt-0.5">Added {formatDate(client.created_at)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-[11px] font-black text-slate-600 uppercase leading-none">{client.ndis_number || "NO NDIS"}</p>
-                        <p className="text-[9px] font-bold text-slate-400 mt-1.5">{client.email || client.phone_number || "No contact Info"}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${client.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                          {client.is_active ? <CheckCircle size={10} /> : <XCircle size={10} />}
-                          {client.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowInfoModal(true); }} className="p-1.5 text-slate-400 hover:text-blue-600"><Eye size={14} /></button>
-                          <Link to={`/edit-client/${client.id}`} onClick={(e) => e.stopPropagation()} className="p-1.5 text-slate-400 hover:text-green-600"><Edit size={14} /></Link>
-                          <button onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowDeleteModal(true); }} className="p-1.5 text-slate-400 hover:text-red-600"><Trash2 size={14} /></button>
-                          <ChevronRight size={14} className="text-slate-200 ml-1" />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                          </td>
+                          <td className="px-6 py-4 hidden lg:table-cell">
+                            <p className="text-[11px] font-black text-slate-600 uppercase leading-none">{client.ndis_number || "NO NDIS"}</p>
+                            <p className="text-[9px] font-bold text-slate-400 mt-1.5">{client.email || client.phone_number || "No contact Info"}</p>
+                          </td>
+                          <td className="px-4 lg:px-6 py-4">
+                            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${client.is_active ? 'bg-green-100/80 text-green-700' : 'bg-red-100/80 text-red-700'} backdrop-blur-sm border ${client.is_active ? 'border-green-200' : 'border-red-200'}`}>
+                              {client.is_active ? <CheckCircle size={10} /> : <XCircle size={10} />}
+                              {client.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                          </td>
+                          {/* Desktop Actions */}
+                          <td className="px-6 py-4 hidden lg:table-cell">
+                            <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowInfoModal(true); }} className="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"><Eye size={14} /></button>
+                              <Link to={`/edit-client/${client.id}`} onClick={(e) => e.stopPropagation()} className="p-1.5 text-slate-400 hover:text-green-600 transition-colors"><Edit size={14} /></Link>
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowDeleteModal(true); }} className="p-1.5 text-slate-400 hover:text-red-600 transition-colors"><Trash2 size={14} /></button>
+                              <ChevronRight size={14} className="text-slate-200 ml-1" />
+                            </div>
+                          </td>
+                          {/* Mobile Toggle Icon */}
+                          <td className="px-4 py-4 text-right lg:hidden">
+                            <div className={`transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
+                              <ChevronDown size={14} className="text-slate-300" />
+                            </div>
+                          </td>
+                        </tr>
+                        {/* Mobile Expanded Actions Tray */}
+                        {isExpanded && (
+                          <tr className="lg:hidden bg-blue-50/30">
+                            <td colSpan="3" className="px-4 py-4 animate-in slide-in-from-top-2 duration-200">
+                              <div className="flex flex-col gap-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-white/60 p-2 rounded-xl border border-blue-100/50">
+                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">Contact</p>
+                                    <p className="text-[9px] font-bold text-slate-600 truncate">{client.phone_number || "No Phone"}</p>
+                                  </div>
+                                  <div className="bg-white/60 p-2 rounded-xl border border-blue-100/50">
+                                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-1">NDIS Number</p>
+                                    <p className="text-[9px] font-bold text-slate-600 truncate">{client.ndis_number || "Pending"}</p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowInfoModal(true); }}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-[9px] font-black uppercase tracking-widest rounded-xl shadow-md shadow-blue-200"
+                                  >
+                                    <Eye size={12} /> View Details
+                                  </button>
+                                  <Link 
+                                    to={`/edit-client/${client.id}`}
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-white border border-slate-200 text-slate-600 text-[9px] font-black uppercase tracking-widest rounded-xl"
+                                  >
+                                    <Edit size={12} /> Modify
+                                  </Link>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); setSelectedClient(client); setShowDeleteModal(true); }}
+                                    className="p-2.5 bg-red-50 text-red-600 rounded-xl border border-red-100"
+                                  >
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

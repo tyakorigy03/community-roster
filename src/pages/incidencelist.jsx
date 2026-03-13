@@ -18,8 +18,10 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
+import { useUser } from "../context/UserContext";
 
 function IncidentsList() {
+  const { currentStaff } = useUser();
   const [incidents, setIncidents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
@@ -27,8 +29,10 @@ function IncidentsList() {
   const [filterHierarchy, setFilterHierarchy] = useState("all");
 
   useEffect(() => {
-    fetchIncidents();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchIncidents();
+    }
+  }, [currentStaff]);
 
   const fetchIncidents = async () => {
     try {
@@ -40,6 +44,7 @@ function IncidentsList() {
           client:clients(first_name, last_name),
           hierarchy:hierarchy(name)
         `)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

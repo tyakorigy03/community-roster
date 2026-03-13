@@ -23,6 +23,7 @@ import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 
 function HierarchyPage() {
+  const { currentStaff } = useUser();
   const [hierarchies, setHierarchies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -52,6 +53,7 @@ function HierarchyPage() {
       const { data, error } = await supabase
         .from("hierarchy")
         .select("*")
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: true });
 
@@ -66,6 +68,7 @@ function HierarchyPage() {
               .from("hierarchy")
               .select("name")
               .eq("id", hierarchy.parent_id)
+              .eq("tenant_id", currentStaff.tenant_id)
               .single();
               
             if (!parentError && parentData) {
@@ -187,7 +190,8 @@ function HierarchyPage() {
       const { error } = await supabase
         .from("hierarchy")
         .delete()
-        .eq("id", selectedHierarchy.id);
+        .eq("id", selectedHierarchy.id)
+        .eq("tenant_id", currentStaff.tenant_id);
 
       if (error) throw error;
 

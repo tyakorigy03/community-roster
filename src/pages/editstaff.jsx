@@ -20,6 +20,7 @@ import {
 import axios from "axios";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 
 const documentFields = [
   "Certificate",
@@ -35,6 +36,7 @@ const documentFields = [
 function EditStaff() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStaff: user } = useUser();
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -75,11 +77,11 @@ function EditStaff() {
   const [loadingRates, setLoadingRates] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (id && user?.tenant_id) {
       fetchStaffData();
       fetchPayRates();
     }
-  }, [id]);
+  }, [id, user?.tenant_id]);
 
   const fetchPayRates = async () => {
     try {
@@ -87,6 +89,7 @@ function EditStaff() {
       const { data, error } = await supabase
         .from('pay_rates')
         .select('*')
+        .eq('tenant_id', user.tenant_id)
         .order('name');
       if (error) throw error;
       setPayRates(data || []);
@@ -105,6 +108,7 @@ function EditStaff() {
         .from("staff")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", user.tenant_id)
         .single();
       if (staffError) throw staffError;
 
@@ -121,7 +125,8 @@ function EditStaff() {
       const { data: documents, error: docError } = await supabase
         .from("staff_documents")
         .select("*")
-        .eq("staff_id", id);
+        .eq("staff_id", id)
+        .eq("tenant_id", user.tenant_id);
 
       if (docError) throw docError;
 
@@ -231,7 +236,8 @@ function EditStaff() {
         const { error } = await supabase
           .from("staff_documents")
           .delete()
-          .eq("id", doc.id);
+          .eq("id", doc.id)
+          .eq("tenant_id", user.tenant_id);
 
         if (error) throw error;
         toast.success(`${docName} removed successfully`);
@@ -440,7 +446,8 @@ function EditStaff() {
           profile_picture: profilePicUrl,
           updated_at: new Date().toISOString()
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", user.tenant_id);
 
       if (staffError) throw staffError;
 
@@ -454,7 +461,8 @@ function EditStaff() {
               effective_from: staffData.rate_effective_from,
               updated_at: new Date().toISOString()
             })
-            .eq("id", staffData.existing_rate_assignment_id);
+            .eq("id", staffData.existing_rate_assignment_id)
+            .eq("tenant_id", user.tenant_id);
           if (rateUpdateError) throw rateUpdateError;
         } else {
           const { error: rateInsertError } = await supabase
@@ -464,7 +472,8 @@ function EditStaff() {
               pay_rate_id: staffData.base_rate_id,
               effective_from: staffData.rate_effective_from || new Date().toISOString().split('T')[0],
               is_default: true,
-              priority: 1
+              priority: 1,
+              tenant_id: user.tenant_id
             }]);
           if (rateInsertError) throw rateInsertError;
         }
@@ -488,7 +497,8 @@ function EditStaff() {
                 expiry_date: doc.expiry || null,
                 updated_at: new Date().toISOString()
               })
-              .eq("id", doc.id);
+              .eq("id", doc.id)
+              .eq("tenant_id", user.tenant_id);
 
             if (updateError) throw updateError;
           } else {
@@ -498,7 +508,8 @@ function EditStaff() {
                 staff_id: id,
                 document_name: docName,
                 file_url: url,
-                expiry_date: doc.expiry || null
+                expiry_date: doc.expiry || null,
+                tenant_id: user.tenant_id
               }]);
 
             if (insertError) throw insertError;
@@ -511,7 +522,8 @@ function EditStaff() {
                 expiry_date: doc.expiry,
                 updated_at: new Date().toISOString()
               })
-              .eq("id", doc.id);
+              .eq("id", doc.id)
+              .eq("tenant_id", user.tenant_id);
 
             if (updateError) throw updateError;
           }

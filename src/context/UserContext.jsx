@@ -21,19 +21,43 @@ export const UserProvider = ({ children }) => {
   } = useUserStore();
 
   useEffect(() => {
-    setLoading(true);
-    const stored = localStorage.getItem("auth_session");
-    const stored2= localStorage.getItem("current_staff");
-    if (stored && stored2) {
-      const data = JSON.parse(stored);
-      const data1=JSON.parse(stored2);
-      setCurrentStaff(data1);
-      setSession(data);
-      setUser(data.user);
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
-  }, [setUser, setSession, setIsAuthenticated, setLoading]);
+    const initAuth = async () => {
+      setLoading(true);
+      const stored = localStorage.getItem("auth_session");
+      const stored2 = localStorage.getItem("current_staff");
+      
+      if (stored && stored2) {
+        const data = JSON.parse(stored);
+        let data1 = JSON.parse(stored2);
+
+        // Check if the current_staff data is missing the multi-tenant identifier
+        if (!data1.tenant_id) {
+          try {
+            const { data: updatedStaff, error } = await supabase
+              .from('staff')
+              .select('*')
+              .eq('user_id', data.user.id)
+              .single();
+
+            if (!error && updatedStaff) {
+              data1 = updatedStaff;
+              localStorage.setItem("current_staff", JSON.stringify(updatedStaff));
+            }
+          } catch (err) {
+            console.error("Error fetching updated profile:", err);
+          }
+        }
+
+        setCurrentStaff(data1);
+        setSession(data);
+        setUser(data.user);
+        setIsAuthenticated(true);
+      }
+      setLoading(false);
+    };
+
+    initAuth();
+  }, [setUser, setSession, setIsAuthenticated, setLoading, setCurrentStaff]);
 
   const login = async (email, password) => {
     setLoading(true);

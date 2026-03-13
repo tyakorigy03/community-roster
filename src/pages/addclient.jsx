@@ -18,8 +18,10 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 
 function AddClient() {
+  const { currentStaff } = useUser();
   const [clientData, setClientData] = useState({
     // Core Identity
     first_name: "",
@@ -151,7 +153,8 @@ function AddClient() {
             document_name: `NDIS_Plan_${clientData.ndis_number}`,
             file_url: ndisPlanDocumentUrl,
             document_type: "NDIS_PLAN",
-            uploaded_at: new Date().toISOString()
+            uploaded_at: new Date().toISOString(),
+            tenant_id: currentStaff.tenant_id
           }])
           .select()
           .single();
@@ -184,7 +187,8 @@ function AddClient() {
           next_of_kin_name: clientData.next_of_kin_name,
           next_of_kin_phone: clientData.next_of_kin_phone,
           next_of_kin_relationship: clientData.next_of_kin_relationship,
-          is_active: clientData.is_active
+          is_active: clientData.is_active,
+          tenant_id: currentStaff.tenant_id
         }])
         .select()
         .single();
@@ -198,7 +202,8 @@ function AddClient() {
             owner_type: 'client',
             owner_id: client.id,
             })
-            .eq('id', ndisPlanDocumentId);
+            .eq('id', ndisPlanDocumentId)
+            .eq('tenant_id', currentStaff.tenant_id);
 
      if (documentUpdateError) throw documentUpdateError;
 

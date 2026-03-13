@@ -11,7 +11,7 @@ import { supabase } from '../lib/supabase';
  * @param {string} assignedBy - ID of user making the assignment
  * @returns {Promise<Object>} Result with success status and data
  */
-export const assignStaffToShift = async (shiftId, staffIds, assignedBy = null) => {
+export const assignStaffToShift = async (shiftId, staffIds, assignedBy = null, options = {}) => {
     try {
         // Remove duplicates
         const uniqueStaffIds = [...new Set(staffIds)];
@@ -21,7 +21,8 @@ export const assignStaffToShift = async (shiftId, staffIds, assignedBy = null) =
             shift_id: shiftId,
             staff_id: staffId,
             assigned_by: assignedBy,
-            assigned_at: new Date().toISOString()
+            assigned_at: new Date().toISOString(),
+            tenant_id: options?.tenant_id
         }));
 
         const { data, error } = await supabase
@@ -45,7 +46,7 @@ export const assignStaffToShift = async (shiftId, staffIds, assignedBy = null) =
  * @param {string} assignedBy - ID of user making the assignment
  * @returns {Promise<Object>} Result with success status
  */
-export const assignStaffToShifts = async (shiftIds, staffIds, assignedBy = null) => {
+export const assignStaffToShifts = async (shiftIds, staffIds, assignedBy = null, options = {}) => {
     try {
         if (!shiftIds?.length || !staffIds?.length) return { success: true };
 
@@ -59,7 +60,8 @@ export const assignStaffToShifts = async (shiftIds, staffIds, assignedBy = null)
                     shift_id: shiftId,
                     staff_id: staffId,
                     assigned_by: assignedBy,
-                    assigned_at: new Date().toISOString()
+                    assigned_at: new Date().toISOString(),
+                    tenant_id: options?.tenant_id
                 });
             }
         }
@@ -83,13 +85,14 @@ export const assignStaffToShifts = async (shiftIds, staffIds, assignedBy = null)
  * @param {string} staffId - The staff ID to remove
  * @returns {Promise<Object>} Result with success status
  */
-export const removeStaffFromShift = async (shiftId, staffId) => {
+export const removeStaffFromShift = async (shiftId, staffId, options = {}) => {
     try {
         const { error } = await supabase
             .from('shift_staff_assignments')
             .delete()
             .eq('shift_id', shiftId)
-            .eq('staff_id', staffId);
+            .eq('staff_id', staffId)
+            .eq('tenant_id', options?.tenant_id);
 
         if (error) throw error;
 
@@ -220,7 +223,8 @@ export const copyShiftToStaff = async (sourceShiftId, targetStaffIds, options = 
             break_minutes: sourceShift.break_minutes,
             shift_type_id: sourceShift.shift_type_id,
             status: options.status || 'scheduled', // Default to scheduled/draft
-            created_at: new Date().toISOString()
+            created_at: new Date().toISOString(),
+            tenant_id: options.tenant_id
         }));
 
         const { data: createdShifts, error: createError } = await supabase
@@ -235,7 +239,8 @@ export const copyShiftToStaff = async (sourceShiftId, targetStaffIds, options = 
             shift_id: shift.id,
             staff_id: shift.staff_id,
             assigned_by: options.assignedBy,
-            assigned_at: new Date().toISOString()
+            assigned_at: new Date().toISOString(),
+            tenant_id: options.tenant_id
         }));
 
         await supabase
@@ -256,17 +261,18 @@ export const copyShiftToStaff = async (sourceShiftId, targetStaffIds, options = 
  * @param {string} assignedBy - ID of user making the change
  * @returns {Promise<Object>} Result with success status
  */
-export const replaceShiftStaff = async (shiftId, staffIds, assignedBy = null) => {
+export const replaceShiftStaff = async (shiftId, staffIds, assignedBy = null, options = {}) => {
     try {
         // Remove all existing assignments
         await supabase
             .from('shift_staff_assignments')
             .delete()
-            .eq('shift_id', shiftId);
+            .eq('shift_id', shiftId)
+            .eq('tenant_id', options?.tenant_id);
 
         // Add new assignments
         if (staffIds && staffIds.length > 0) {
-            return await assignStaffToShift(shiftId, staffIds, assignedBy);
+            return await assignStaffToShift(shiftId, staffIds, assignedBy, options);
         }
 
         return { success: true, data: [] };

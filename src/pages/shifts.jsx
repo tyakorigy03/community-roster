@@ -19,6 +19,7 @@ import {
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext';
 import ShiftModal from './addshift';
 import ShiftDetailsModal from '../components/ShiftDetailsModal';
 import { assignStaffToShift, replaceShiftStaff, copyShiftToStaff, assignStaffToShifts } from '../services/shiftAssignments';
@@ -371,6 +372,7 @@ function RosterRow({ rowItem, viewBy, weekDates, getShifts, onAddShift, onEditSh
 
 // Main WeeklyRoster Component
 export default function WeeklyRoster() {
+  const { currentStaff } = useUser();
   const [weekDates, setWeekDates] = useState(generateWeekDates());
   const [employees, setEmployees] = useState([]);
   const [shifts, setShifts] = useState([]);
@@ -408,16 +410,19 @@ export default function WeeklyRoster() {
 
   // Fetch data on mount and when week changes
   useEffect(() => {
-    fetchData();
+    if (currentStaff?.tenant_id) {
+      fetchData();
+    }
     // Auto-select today on mobile if present in current week
     const today = new Date().toISOString().split('T')[0];
     const idx = weekDates.indexOf(today);
     if (idx !== -1) {
       setExpandedDayIndex(idx);
     }
-  }, [weekDates]);
+  }, [weekDates, currentStaff]);
 
   const fetchData = async () => {
+    if (!currentStaff?.tenant_id) return;
     try {
       setLoading(true);
 
@@ -426,6 +431,7 @@ export default function WeeklyRoster() {
         .from("clients")
         .select("id, first_name, last_name, ndis_number")
         .eq("is_active", true)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("first_name", { ascending: true });
 
       if (clientsError) throw clientsError;
@@ -436,6 +442,7 @@ export default function WeeklyRoster() {
         .from("staff")
         .select("id, name, role, email, phone")
         .eq("is_active", true)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("name", { ascending: true });
 
       if (staffError) throw staffError;
@@ -467,6 +474,7 @@ export default function WeeklyRoster() {
         `)
         .gte('shift_date', startDate)
         .lte('shift_date', endDate)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('shift_date', { ascending: true })
         .order('start_time', { ascending: true });
 
@@ -587,7 +595,7 @@ export default function WeeklyRoster() {
       });
 
       if (toDelete.length > 0) {
-        const { error } = await supabase.from('shifts').delete().in('id', toDelete);
+        const { error } = await supabase.from('shifts').delete().in('id', toDelete).eq('tenant_id', currentStaff.tenant_id);
         if (error) throw error;
         toast.success(`Removed ${toDelete.length} conflicting shifts.`);
         await fetchData();
@@ -688,6 +696,7 @@ export default function WeeklyRoster() {
             updated_at: new Date().toISOString()
           })
           .eq('id', shiftData.id)
+          .eq('tenant_id', currentStaff.tenant_id)
           .select()
           .single();
 
@@ -695,7 +704,7 @@ export default function WeeklyRoster() {
 
         // Update staff assignments
         if (shiftData.staff_ids && shiftData.staff_ids.length > 0) {
-          await replaceShiftStaff(shiftData.id, shiftData.staff_ids);
+          await replaceShiftStaff(shiftData.id, shiftData.staff_ids, currentStaff.id, { tenant_id: currentStaff.tenant_id });
         }
 
         toast.success('Shift updated successfully');
@@ -710,7 +719,8 @@ export default function WeeklyRoster() {
           break_minutes: shiftData.break_minutes,
           shift_type_id: shiftData.shift_type_id || null,
           status: 'scheduled',
-          created_by: 1, // TODO: Replace with actual user ID
+          created_by: currentStaff.id,
+          tenant_id: currentStaff.tenant_id,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
@@ -786,7 +796,7 @@ export default function WeeklyRoster() {
         // Create staff assignments for all created shifts
         if (shiftData.staff_ids && shiftData.staff_ids.length > 0 && createdShifts) {
           const shiftIds = createdShifts.map(s => s.id);
-          await assignStaffToShifts(shiftIds, shiftData.staff_ids);
+          await assignStaffToShifts(shiftIds, shiftData.staff_ids, currentStaff.id, { tenant_id: currentStaff.tenant_id });
         }
         toast.success(shiftsToInsert.length > 1
           ? `Successfully created ${shiftsToInsert.length} shifts`
@@ -806,7 +816,11 @@ export default function WeeklyRoster() {
 
   const handleCopyShiftToStaff = async (shiftId, targetStaffIds) => {
     try {
-      const result = await copyShiftToStaff(shiftId, targetStaffIds, { status: 'scheduled' });
+      const result = await copyShiftToStaff(shiftId, targetStaffIds, { 
+        status: 'scheduled',
+        tenant_id: currentStaff.tenant_id,
+        assignedBy: currentStaff.id
+      });
 
       if (result.success) {
         toast.success(`Shift copied to ${targetStaffIds.length} staff member(s)`);
@@ -840,7 +854,8 @@ export default function WeeklyRoster() {
       const { error } = await supabase
         .from('shifts')
         .update(updateData)
-        .eq('id', shiftId);
+        .eq('id', shiftId)
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -860,7 +875,8 @@ export default function WeeklyRoster() {
         const { error } = await supabase
           .from('shifts')
           .delete()
-          .eq('id', shiftId);
+          .eq('id', shiftId)
+          .eq('tenant_id', currentStaff.tenant_id);
 
         if (error) throw error;
 
@@ -905,7 +921,8 @@ export default function WeeklyRoster() {
           .from('shifts')
           .delete()
           .gte('shift_date', startDate)
-          .lte('shift_date', endDate);
+          .lte('shift_date', endDate)
+          .eq('tenant_id', currentStaff.tenant_id);
 
         if (error) throw error;
 
@@ -941,7 +958,8 @@ export default function WeeklyRoster() {
         .from('shifts')
         .select('*')
         .gte('shift_date', prevMonday.toISOString().split('T')[0])
-        .lte('shift_date', prevSunday.toISOString().split('T')[0]);
+        .lte('shift_date', prevSunday.toISOString().split('T')[0])
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -1004,6 +1022,7 @@ export default function WeeklyRoster() {
         .gte('shift_date', startDate)
         .lte('shift_date', endDate)
         .eq('status', 'scheduled')
+        .eq('tenant_id', currentStaff.tenant_id)
         .select('*', { count: 'exact' });
 
       if (updateError) throw updateError;
@@ -1025,7 +1044,8 @@ export default function WeeklyRoster() {
           },
           body: JSON.stringify({
             startDate: weekDates[0],
-            endDate: weekDates[6]
+            endDate: weekDates[6],
+            tenant_id: currentStaff.tenant_id
           })
         }
       );
@@ -1065,7 +1085,7 @@ export default function WeeklyRoster() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-50 overflow-hidden font-sans">
+    <div className="h-full  flex flex-col bg-gray-50 overflow-hidden font-sans">
       {/* --- UNIFIED COMPACT HEADER --- */}
       <header className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
         <div className="max-w-[1600px] mx-auto px-3 py-2 flex  gap-2 flex-row items-center justify-between">
@@ -1441,7 +1461,7 @@ export default function WeeklyRoster() {
         onEdit={openEditShift}
         onDelete={handleDeleteShift}
         onUpdateStatus={async (id, status) => {
-          const { error } = await supabase.from('shifts').update({ status }).eq('id', id);
+          const { error } = await supabase.from('shifts').update({ status }).eq('id', id).eq('tenant_id', currentStaff.tenant_id);
           if (error) toast.error('Failed to update status');
           else {
             toast.success(`Shift marked as ${status}`);
@@ -1456,7 +1476,8 @@ export default function WeeklyRoster() {
             const { error } = await supabase
               .from('staff_shifts')
               .update({ approved: true, updated_at: new Date().toISOString() })
-              .eq('shift_id', id);
+              .eq('shift_id', id)
+              .eq('tenant_id', currentStaff.tenant_id);
 
             if (error) throw error;
             toast.success('Shift Tactical Approval Secured');

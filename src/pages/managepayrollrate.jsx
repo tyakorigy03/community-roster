@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 import {
   DollarSign,
   Users,
@@ -31,6 +32,7 @@ import {
 
 // Pay Rate Management Component
 export default function PayRateManagement() {
+  const { currentStaff } = useUser();
   const [payRates, setPayRates] = useState([]);
   const [staffPayRates, setStaffPayRates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,6 +54,7 @@ export default function PayRateManagement() {
       const { data: ratesData, error: ratesError } = await supabase
         .from('pay_rates')
         .select('*')
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('created_at', { ascending: false });
 
       if (ratesError) throw ratesError;
@@ -65,6 +68,7 @@ export default function PayRateManagement() {
           staff:staff_id(id, name, email, profile_picture),
           pay_rate:pay_rate_id(*)
         `)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('created_at', { ascending: false });
 
       if (staffRatesError) throw staffRatesError;
@@ -90,7 +94,8 @@ export default function PayRateManagement() {
       const { error } = await supabase
         .from('pay_rates')
         .update({ is_active: false })
-        .eq('id', rateId);
+        .eq('id', rateId)
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -111,7 +116,8 @@ export default function PayRateManagement() {
       const { error } = await supabase
         .from('staff_pay_rates')
         .delete()
-        .eq('id', staffRateId);
+        .eq('id', staffRateId)
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -518,8 +524,10 @@ function CreateRateModal({ isOpen, onClose, onSuccess, rateToEdit }) {
     hourly_rate: '',
     day_type: 'weekday',
     custom_date: '',
-    is_active: true
+    is_active: true,
+    tenant_id: ''
   });
+  const { currentStaff } = useUser();
   const [loading, setLoading] = useState(false);
   const isEditing = !!rateToEdit;
 
@@ -559,7 +567,8 @@ function CreateRateModal({ isOpen, onClose, onSuccess, rateToEdit }) {
         hourly_rate: parseFloat(formData.hourly_rate),
         day_type: formData.day_type,
         is_active: formData.is_active,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        tenant_id: currentStaff.tenant_id
       };
 
       if (formData.day_type === 'custom') {
@@ -573,7 +582,8 @@ function CreateRateModal({ isOpen, onClose, onSuccess, rateToEdit }) {
         const { error } = await supabase
           .from('pay_rates')
           .update(insertData)
-          .eq('id', rateToEdit.id);
+          .eq('id', rateToEdit.id)
+          .eq('tenant_id', currentStaff.tenant_id);
 
         if (error) throw error;
         toast.success('Pay rate updated successfully');
@@ -787,6 +797,7 @@ function AssignRateToStaffModal({ isOpen, onClose, onSuccess }) {
     is_default: false,
     priority: 0
   });
+  const { currentStaff } = useUser();
   const [loading, setLoading] = useState(false);
   const [staffList, setStaffList] = useState([]);
   const [payRates, setPayRates] = useState([]);
@@ -804,6 +815,7 @@ function AssignRateToStaffModal({ isOpen, onClose, onSuccess }) {
         .from('staff')
         .select('id, name, email, role')
         .eq('is_active', true)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('name');
 
       if (staffError) throw staffError;
@@ -814,6 +826,7 @@ function AssignRateToStaffModal({ isOpen, onClose, onSuccess }) {
         .from('pay_rates')
         .select('*')
         .eq('is_active', true)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('day_type')
         .order('hourly_rate', { ascending: false });
 
@@ -843,7 +856,8 @@ function AssignRateToStaffModal({ isOpen, onClose, onSuccess }) {
         effective_from: formData.effective_from,
         is_default: formData.is_default,
         priority: parseInt(formData.priority) || 0,
-        created_by: userData.user?.id ? 1 : null
+        created_by: currentStaff?.id,
+        tenant_id: currentStaff.tenant_id
       };
 
       if (formData.effective_to) {
@@ -1084,7 +1098,8 @@ function EditStaffRateModal({ isOpen, onClose, onSuccess, assignment }) {
       const { error } = await supabase
         .from('staff_pay_rates')
         .update(updateData)
-        .eq('id', assignment.id);
+        .eq('id', assignment.id)
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (error) throw error;
 

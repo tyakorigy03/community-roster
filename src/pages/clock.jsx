@@ -30,17 +30,20 @@ export default function ClockInOutPage() {
   // Check if photo proof is required
   useEffect(() => {
     const checkPhotoRequirement = async () => {
+      if (!staff) return;
+      
       const { data } = await supabase
         .from('settings')
         .select('enabled')
         .eq('key', 'photo-proof')
+        .eq('tenant_id', staff.tenant_id)
         .single();
 
       setRequiresPhoto(data?.enabled || false);
     };
 
     checkPhotoRequirement();
-  }, []);
+  }, [staff]);
 
   // Fetch shift and staff data
   useEffect(() => {
@@ -52,7 +55,17 @@ export default function ClockInOutPage() {
       setLoading(true);
       setError("");
 
-      // Fetch shift details
+      // Fetch staff details
+      const { data: staffData, error: staffError } = await supabase
+        .from('staff')
+        .select('*')
+        .eq('id', staff_id)
+        .single();
+
+      if (staffError) throw staffError;
+      setStaff(staffData);
+
+      // Fetch shift details with tenant check
       const { data: shiftData, error: shiftError } = await supabase
         .from('shifts')
         .select(`
@@ -68,21 +81,11 @@ export default function ClockInOutPage() {
           )
         `)
         .eq('id', shift_id)
+        .eq('tenant_id', staffData.tenant_id)
         .single();
 
       if (shiftError) throw shiftError;
-
-      // Fetch staff details
-      const { data: staffData, error: staffError } = await supabase
-        .from('staff')
-        .select('*')
-        .eq('id', staff_id)
-        .single();
-
-      if (staffError) throw staffError;
-
       setShift(shiftData);
-      setStaff(staffData);
 
       // Check current clock status
       const staffShift = shiftData.staff_shifts?.[0];
@@ -245,6 +248,7 @@ export default function ClockInOutPage() {
         .select('*')
         .eq('shift_id', shift_id)
         .eq('staff_id', staff_id)
+        .eq('tenant_id', staff.tenant_id)
         .single();
 
       let result;
@@ -261,6 +265,7 @@ export default function ClockInOutPage() {
             updated_at: now
           })
           .eq('id', existingShift.id)
+          .eq('tenant_id', staff.tenant_id)
           .select();
       } else {
         // Create new record
@@ -272,7 +277,8 @@ export default function ClockInOutPage() {
             clock_in_time: now,
             clock_in_photo_url: photoPublicUrl,
             clock_in_location: JSON.stringify(location),
-            status: 'clocked_in'
+            status: 'clocked_in',
+            tenant_id: staff.tenant_id
           })
           .select();
       }
@@ -325,6 +331,7 @@ export default function ClockInOutPage() {
         .select('*')
         .eq('shift_id', shift_id)
         .eq('staff_id', staff_id)
+        .eq('tenant_id', staff.tenant_id)
         .single();
 
       if (!existingShift || !existingShift.clock_in_time) {
@@ -342,6 +349,7 @@ export default function ClockInOutPage() {
           updated_at: now
         })
         .eq('id', existingShift.id)
+        .eq('tenant_id', staff.tenant_id)
         .select();
 
       if (result.error) throw result.error;

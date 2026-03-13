@@ -1,8 +1,9 @@
-import { DollarSign, Download, Calendar, AlertCircle, Clock, Users, X, FileText, ChevronLeft, ChevronRight, Menu, Filter, Search, ChevronDown, Shield, CreditCard, ArrowUpRight, TrendingUp, Plus } from "lucide-react";
+import { DollarSign, Download, Calendar, AlertCircle, Clock, Users, X, FileText, ChevronLeft, ChevronRight, Menu, Filter, Search, ChevronDown, Shield, CreditCard, ArrowUpRight, TrendingUp, Plus, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { useUser } from "../context/UserContext";
 import { generatePayrollReportPDF } from "../utils/payrollReportPdf";
 import { AssignRateToStaffModal } from "./modal/staffRate";
 
@@ -128,8 +129,156 @@ function DateRangeModal({ isOpen, onClose, onApply, currentPeriod, currentDates 
   );
 }
 
+function StaffDetailPanel({ isOpen, onClose, staff, start_date, end_date, tenant_id }) {
+  const [shifts, setShifts] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen && staff) {
+      fetchStaffShifts();
+    }
+  }, [isOpen, staff]);
+
+  const fetchStaffShifts = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('shifts')
+        .select(`
+          *,
+          client:client_id(first_name, last_name),
+          shift_type:shift_type_id(name),
+          staff_shifts!inner(status, approved)
+        `)
+        .eq('staff_id', staff.staff_id)
+        .eq('tenant_id', tenant_id)
+        .or('status.in.(completed,approved),approved.eq.true', { foreignTable: 'staff_shifts' })
+        .gte('shift_date', start_date)
+        .lte('shift_date', end_date)
+        .order('shift_date', { ascending: false });
+
+      if (error) throw error;
+      setShifts(data || []);
+    } catch (error) {
+      console.error('Error fetching staff shifts:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen || !staff) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex justify-end">
+      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden p-0.5">
+              {staff.profile_picture ? (
+                <img src={staff.profile_picture} className="w-full h-full object-cover rounded-[14px]" alt="" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-sm font-black text-slate-400 bg-slate-50 uppercase">
+                  {staff.staff_name?.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight">{staff.staff_name}</h2>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{staff.role}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200/50 rounded-xl transition-colors">
+            <X size={20} className="text-slate-400" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100/50">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1">Total Hours</p>
+              <div className="text-2xl font-black text-blue-900">{staff.billable_hours?.toFixed(1)}h</div>
+            </div>
+            <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50">
+              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Gross Pay</p>
+              <div className="text-2xl font-black text-emerald-900">${staff.gross_pay?.toFixed(2)}</div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Engagement Details</h3>
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-3">
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-400 uppercase tracking-wider">Email</span>
+                <span className="font-black text-slate-700">{staff.email}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-400 uppercase tracking-wider">Phone</span>
+                <span className="font-black text-slate-700">{staff.phone}</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px]">
+                <span className="font-bold text-slate-400 uppercase tracking-wider">Current Rates</span>
+                <span className="font-black text-blue-600">{staff.hourly_rate}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 flex items-center justify-between">
+              Shift Chronology
+              <span className="text-[9px] lowercase font-bold text-slate-300">Period activity only</span>
+            </h3>
+            
+            {loading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin h-5 w-5 border-2 border-slate-200 border-t-blue-600 rounded-full"></div>
+              </div>
+            ) : shifts.length === 0 ? (
+              <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">No shift activity found</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {shifts.map((shift) => (
+                  <div key={shift.id} className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between group">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-50 rounded-lg group-hover:bg-blue-50 transition-colors">
+                        <Clock size={14} className="text-slate-400 group-hover:text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{formatDate(shift.shift_date, true)}</p>
+                        <p className="text-[9px] font-bold text-slate-400 uppercase">{shift.client?.first_name} {shift.client?.last_name} · {shift.shift_type?.name || 'General'}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[11px] font-black text-slate-900">{shift.start_time.substring(0, 5)} - {shift.end_time.substring(0, 5)}</p>
+                      <p className={`text-[9px] font-bold uppercase tracking-widest ${shift.staff_shifts?.[0]?.status === 'approved' || shift.status === 'approved' ? 'text-emerald-600' : 'text-blue-600'}`}>
+                        {shift.staff_shifts?.[0]?.status || shift.status}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-slate-100 bg-slate-50/50">
+          <button
+            onClick={onClose}
+            className="w-full h-11 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:bg-blue-500 transition-all flex items-center justify-center gap-2"
+          >
+            Back to Payroll
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Main Payroll Page Component
 export default function PayrollPage() {
+  const { currentStaff } = useUser();
   const [payrollData, setPayrollData] = useState([]);
   const [showDateRange, setShowDateRange] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -148,6 +297,8 @@ export default function PayrollPage() {
 
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
+  const [showStaffDetail, setShowStaffDetail] = useState(false);
+  const [staffForDetail, setStaffForDetail] = useState(null);
 
   useEffect(() => {
     // Initialize date range to current week
@@ -178,18 +329,18 @@ export default function PayrollPage() {
       const { data, error } = await supabase
         .rpc('get_staff_pay_summary', {
           start_date: dateRange.start,
-          end_date: dateRange.end
+          end_date: dateRange.end,
+          p_tenant_id: currentStaff.tenant_id
         });
 
       if (error) throw error;
 
-      // Transform the data to match your frontend structure
       const processedData = (data || []).map(record => ({
         staff_id: record.staff_id,
         staff_name: record.name,
         profile_picture: record.profile_picture,
         billable_hours: record.total_hours,
-        hourly_rate: record.hourly_rate,
+        hourly_rate: record.hourly_rate_display, // Aggregated rate string
         gross_pay: record.total_pay,
         email: record.email,
         phone: record.phone,
@@ -241,7 +392,7 @@ export default function PayrollPage() {
       averageHoursPerStaff,
       averagePayPerStaff,
       roleSummary,
-      missingRateCount: data.filter(r => !r.hourly_rate || r.hourly_rate <= 0).length
+      missingRateCount: data.filter(r => !r.hourly_rate || r.hourly_rate === 'No Rate').length
     });
   };
 
@@ -347,8 +498,8 @@ export default function PayrollPage() {
       r.email,
       `="${r.phone}"`,                 // phone forced to text
       r.role,
-      r.billable_hours.toFixed(2),
-      r.hourly_rate.toFixed(2),         // numeric, safe
+      r.billable_hours.toFixed(1),
+      r.hourly_rate,         // string, aggregated
       r.gross_pay.toFixed(2)
     ]);
 
@@ -507,12 +658,12 @@ export default function PayrollPage() {
               <table className="min-w-full divide-y divide-slate-100">
                 <thead className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">
                   <tr>
-                    <th className="px-6 py-4 text-left">Internal Personnel</th>
-                    <th className="px-6 py-4 text-left">Contact Credentials</th>
-                    <th className="px-6 py-4 text-left">Classification</th>
-                    <th className="px-6 py-4 text-left">Operational Hours</th>
-                    <th className="px-6 py-4 text-left">Configured Rate</th>
-                    <th className="px-6 py-4 text-right">Gross Total</th>
+                    <th className="px-4 md:px-6 py-4 text-left">Internal Personnel</th>
+                    <th className="px-6 py-4 text-left hidden md:table-cell">Contact Credentials</th>
+                    <th className="px-6 py-4 text-left hidden lg:table-cell">Classification</th>
+                    <th className="px-4 md:px-6 py-4 text-left">Operational Hours</th>
+                    <th className="px-4 md:px-6 py-4 text-left hidden sm:table-cell">Configured Rate</th>
+                    <th className="px-4 md:px-6 py-4 text-right">Gross Total</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-slate-50">
@@ -532,55 +683,75 @@ export default function PayrollPage() {
                     payrollData.map((record) => {
                       const isMissingRate = !record.hourly_rate || record.hourly_rate <= 0;
                       return (
-                        <tr key={record.staff_id} className={`group hover:bg-slate-50/50 transition-colors ${isMissingRate ? 'bg-rose-50/30' : ''}`}>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
-                              <div className="h-9 w-9 bg-slate-100 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                        <tr 
+                          key={record.staff_id} 
+                          className={`group even:bg-slate-50/30 transition-colors cursor-pointer hover:bg-slate-100/50 ${isMissingRate ? 'bg-rose-50/30' : ''}`}
+                          onClick={() => {
+                            setStaffForDetail(record);
+                            setShowStaffDetail(true);
+                          }}
+                        >
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2 md:gap-3">
+                              <div className="h-8 w-8 md:h-9 md:w-9 bg-slate-100 rounded-lg md:rounded-xl overflow-hidden border border-slate-200 shadow-sm shrink-0">
                                 {record.profile_picture ? (
                                   <img src={record.profile_picture} className="w-full h-full object-cover" alt="" />
                                 ) : (
-                                  <div className="w-full h-full flex items-center justify-center text-[10px] font-black text-slate-400 uppercase bg-slate-50">
+                                  <div className="w-full h-full flex items-center justify-center text-[8px] md:text-[10px] font-black text-slate-400 uppercase bg-slate-50">
                                     {record.staff_name?.charAt(0)}
                                   </div>
                                 )}
                               </div>
-                              <div>
-                                <div className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{record.staff_name}</div>
-                                <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Active Staff</div>
+                              <div className="min-w-0">
+                                <div className="text-[10px] md:text-[11px] font-black text-slate-900 uppercase tracking-tight truncate">{record.staff_name}</div>
+                                <div className="text-[8px] md:text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5 truncate hidden sm:block">Active Staff</div>
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
+                          <td className="px-6 py-4 whitespace-nowrap hidden md:table-cell">
                             <div className="flex flex-col">
-                              <span className="text-[11px] font-bold text-slate-600">{record.email}</span>
+                              <span className="text-[11px] font-bold text-slate-600 truncate max-w-[150px]">{record.email}</span>
                               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{record.phone}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-[11px] font-black text-slate-700 uppercase">{record.role}</td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-1.5 text-[11px] font-black text-blue-600">
-                              <Clock size={12} className="opacity-50" />
-                              {record.billable_hours?.toFixed(2) || 0}h
+                          <td className="px-6 py-4 whitespace-nowrap text-[11px] font-black text-slate-700 uppercase hidden lg:table-cell">{record.role}</td>
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-1.5 text-[10px] md:text-[11px] font-black text-blue-600">
+                              <Clock size={10} className="opacity-50 hidden sm:block" />
+                              {record.billable_hours?.toFixed(1) || 0}h
                             </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {isMissingRate ? (
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap hidden sm:table-cell">
+                            {isMissingRate || record.hourly_rate === 'No Rate' ? (
                               <button
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Don't trigger row click
                                   setSelectedStaff(record);
                                   setShowAssignModal(true);
                                 }}
-                                className="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200 text-[9px] font-black uppercase tracking-widest animate-pulse hover:bg-rose-200 transition-all"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 md:py-1 rounded-lg bg-rose-100 text-rose-700 border border-rose-200 text-[8px] md:text-[9px] font-black uppercase tracking-widest animate-pulse hover:bg-rose-200 transition-all"
                               >
                                 <Plus size={10} />
-                                Assign Rate
+                                Link Rate
                               </button>
                             ) : (
-                              <div className="text-[11px] font-black text-slate-900">${record.hourly_rate}/hr</div>
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation(); // Don't trigger row click
+                                  setSelectedStaff(record);
+                                  setShowAssignModal(true);
+                                }}
+                                className="group/rate flex items-center gap-1.5 text-[10px] md:text-[11px] font-black text-slate-900"
+                              >
+                                <span className="text-slate-400 group-hover/rate:text-blue-500 transition-colors">
+                                  {record.hourly_rate}
+                                </span>
+                                <span className="text-slate-400 group-hover/rate:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={10} /></span>
+                              </button>
                             )}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <div className="inline-flex items-center px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-[11px] font-black transition-all group-hover:shadow-md group-hover:scale-105">
+                          <td className="px-4 md:px-6 py-4 whitespace-nowrap text-right">
+                            <div className="inline-flex items-center px-2 py-1 md:px-2.5 md:py-1.5 rounded-lg md:rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 text-[10px] md:text-[11px] font-black transition-all group-hover:shadow-md group-hover:scale-105">
                               ${record.gross_pay?.toFixed(2) || '0.00'}
                             </div>
                           </td>
@@ -658,6 +829,18 @@ export default function PayrollPage() {
         staffId={selectedStaff?.staff_id}
         staffName={selectedStaff?.staff_name}
         onSuccess={fetchPayrollData}
+      />
+
+      <StaffDetailPanel
+        isOpen={showStaffDetail}
+        onClose={() => {
+          setShowStaffDetail(false);
+          setStaffForDetail(null);
+        }}
+        staff={staffForDetail}
+        start_date={dateRange.start}
+        end_date={dateRange.end}
+        tenant_id={currentStaff?.tenant_id}
       />
     </div>
   );

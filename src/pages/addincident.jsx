@@ -11,12 +11,15 @@ import {
   Users,
   AlertTriangle,
   FileText,
-  Image,
+  Image as ImageIcon,
   Paperclip,
+  Search,
+  Lock,
   ChevronDown,
-  Search
+  Check,
+  Circle
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 import axios from "axios";
@@ -25,6 +28,13 @@ import { useUser } from "../context/UserContext";
 function AddIncident() {
   const { currentStaff: user } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const shift_id = queryParams.get("shift_id") || null;
+
+  const [shiftData, setShiftData] = useState(null);
+  const [clientData, setClientData] = useState(null);
+  const [staffId, setStaffId] = useState(null);
 
   // Form state - Updated with ALL fields
   const [incidentData, setIncidentData] = useState({
@@ -92,7 +102,6 @@ function AddIncident() {
   const [filteredClients, setFilteredClients] = useState([]);
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [staffId, setStaffId] = useState(null);
   const [staffList, setStaffList] = useState([]);
 
   useEffect(() => {
@@ -115,20 +124,66 @@ function AddIncident() {
 
   const fileInputRef = useRef(null);
 
-  // Set created_by to current user when component loads
+  // Fetch shift data if shift_id is provided
   useEffect(() => {
-    if (user?.id) {
-      setIncidentData(prev => ({
-        ...prev,
-        created_by: user.id
-      }));
-    }
-  }, [user]);
+    const fetchShiftData = async () => {
+      if (!shift_id || !user?.tenant_id) return;
+      
+      // Avoid redundant fetching if already loaded
+      if (shiftData?.id === shift_id) return;
+
+      try {
+        const { data: fetchedShift, error: shiftError } = await supabase
+          .from('shifts')
+          .select(`
+            *,
+            client:client_id(first_name, last_name, ndis_number),
+            staff:staff_id(name),
+            shift_type:shift_type_id(name, id)
+          `)
+          .eq('id', shift_id)
+          .eq('tenant_id', user.tenant_id)
+          .single();
+
+        if (shiftError) throw shiftError;
+
+        if (fetchedShift) {
+          setShiftData(fetchedShift);
+          setClientData({
+            id: fetchedShift.client_id,
+            first_name: fetchedShift.client?.first_name,
+            last_name: fetchedShift.client?.last_name,
+            ndis_number: fetchedShift.client?.ndis_number
+          });
+
+          // Auto-fill form with shift data
+          setIncidentData(prev => ({
+            ...prev,
+            client_id: fetchedShift.client_id,
+            incident_date: fetchedShift.shift_date,
+            incident_time: fetchedShift.start_time?.substring(0, 5) || '',
+            event_date: new Date().toISOString().split('T')[0],
+            subject: `Incident during Shift on ${new Date(fetchedShift.shift_date).toLocaleDateString('en-AU')} - ${fetchedShift.client?.first_name} ${fetchedShift.client?.last_name}`,
+            location: fetchedShift.location || ''
+          }));
+
+          toast.success('Shift data linked to incident report');
+        }
+      } catch (error) {
+        console.error("Error fetching shift data:", error);
+        toast.error("Failed to load linked shift data.");
+      }
+    };
+
+    fetchShiftData();
+  }, [shift_id, user?.tenant_id]);
 
   // Fetch initial data
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    if (user?.tenant_id) {
+      fetchInitialData();
+    }
+  }, [user?.tenant_id]);
 
   useEffect(() => {
     if (searchTerm) {
@@ -150,6 +205,7 @@ function AddIncident() {
       const { data: clientsData, error: clientsError } = await supabase
         .from("clients")
         .select("id, first_name, last_name, ndis_number")
+        .eq("tenant_id", user.tenant_id)
         .eq("is_active", true)
         .order("first_name", { ascending: true });
 
@@ -161,6 +217,7 @@ function AddIncident() {
       const { data: hierarchiesData, error: hierarchiesError } = await supabase
         .from("hierarchy")
         .select("id, name, code")
+        .eq("tenant_id", user.tenant_id)
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
@@ -172,6 +229,7 @@ function AddIncident() {
       const { data: typesData, error: typesError } = await supabase
         .from("incident_types")
         .select("*")
+        .eq("tenant_id", user.tenant_id)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -182,6 +240,7 @@ function AddIncident() {
       const { data: emergencyData, error: emergencyError } = await supabase
         .from("emergency_assistance_types")
         .select("*")
+        .eq("tenant_id", user.tenant_id)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -191,6 +250,7 @@ function AddIncident() {
         const { data: staffData, error: staffError } = await supabase
           .from("staff")
           .select("id, name, email, role")
+          .eq("tenant_id", user.tenant_id)
           .eq("is_active", true)
           .order("name", { ascending: true });
 
@@ -413,6 +473,7 @@ function AddIncident() {
 
           // Automatically set to current user
           created_by: incidentData.created_by,
+          tenant_id: user.tenant_id,
           created_at: new Date().toISOString()
         }])
         .select()
@@ -435,7 +496,8 @@ function AddIncident() {
         const incidentTypePromises = selectedIncidentTypes.map(typeId =>
           supabase.from("incident_type_relations").insert([{
             incident_id: incident.id,
-            incident_type_id: typeId
+            incident_type_id: typeId,
+            tenant_id: user.tenant_id
           }])
         );
 
@@ -449,7 +511,8 @@ function AddIncident() {
           return supabase.from("incident_emergency_assistance").insert([{
             incident_id: incident.id,
             assistance_type_id: typeId,
-            details: emergencyType?.name === 'Others' ? otherEmergencyDetails : null
+            details: emergencyType?.name === 'Others' ? otherEmergencyDetails : null,
+            tenant_id: user.tenant_id
           }]);
         });
 
@@ -466,7 +529,8 @@ function AddIncident() {
             file_url: attachment.url,
             file_type: attachment.type,
             file_size: attachment.size,
-            uploaded_by: user?.id
+            uploaded_by: user?.id,
+            tenant_id: user.tenant_id
           }])
         );
 
@@ -529,65 +593,114 @@ function AddIncident() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Tactical Header */}
-        <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 h-full w-64 bg-gradient-to-l from-white/5 to-transparent"></div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() => navigate(-1)}
-                className="h-12 w-12 bg-white/10 hover:bg-white/20 rounded-2xl flex items-center justify-center transition-all border border-white/10 group"
-              >
-                <ArrowLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
-              </button>
+    <div className="min-h-screen bg-slate-50 animate-in fade-in duration-500">
+      {/* Compact Header */}
+      <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 bg-slate-100/50 text-slate-400 rounded-xl hover:bg-blue-600 hover:text-white transition-all flex-shrink-0"
+          >
+            <ArrowLeft size={16} />
+          </button>
+
+          <div className="min-w-0">
+            <h2 className="text-sm lg:text-lg font-black text-slate-900 uppercase tracking-tight truncate">New Incident Report</h2>
+            <p className="text-[9px] lg:text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1 truncate">
+              File New Report • {new Date().toLocaleDateString('en-AU')}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            className="px-3 py-2 bg-blue-600 text-white text-[9px] lg:text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2 disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <>
+                <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                Saving
+              </>
+            ) : (
+              <>
+                <Save size={13} /> Save Report
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="p-4 lg:p-6 max-w-4xl mx-auto">
+        {/* Shift Info Banner */}
+        {shiftData && (
+          <div className="mb-6 bg-blue-600 border border-blue-700 rounded-[1.5rem] p-5 shadow-lg animate-in slide-in-from-top-4 duration-500 text-white">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/20">
+                  <FileText size={18} className="text-white" />
+                </div>
+                <div>
+                  <p className="text-[8px] font-black text-blue-200 uppercase tracking-[0.2em] mb-0.5">Linked Shift</p>
+                  <h3 className="text-[13px] font-black uppercase tracking-tight text-white flex items-center gap-2">
+                    {clientData?.first_name} {clientData?.last_name}
+                    <span className="text-[9px] font-black bg-white/20 px-2 py-0.5 rounded-full">ID: {shift_id?.substring(0, 8)}</span>
+                  </h3>
+                </div>
+              </div>
+              <div className="text-right hidden sm:block">
+                <p className="text-[9px] font-black uppercase tracking-widest text-blue-200">Session</p>
+                <p className="text-[11px] font-black text-white">{shiftData.start_time?.substring(0, 5)} - {shiftData.end_time?.substring(0, 5)}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+          {/* Section 1: Client & Incident Information */}
+          <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+            <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                <Users size={18} />
+              </div>
               <div>
-                <h1 className="text-2xl font-black uppercase tracking-tight leading-none mb-1">Incident Intake</h1>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/5 px-2 py-1 rounded-md border border-white/5 inline-block">
-                  Manual Entry Protocol • {new Date().toLocaleDateString('en-AU')}
+                <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                  Client Profile
+                </h3>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                  Information Details
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <AlertTriangle size={20} />
-              </div>
-              <div className="text-right">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 text-blue-400">Security Clearance</p>
-                <p className="text-[12px] font-black uppercase tracking-tight">{user?.name || 'Authorized Personnel'}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-slate-100 relative">
-          <form className="space-y-12" onSubmit={handleSubmit}>
-            {/* Section 1: Tactical Configuration */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                  <AlertTriangle size={16} />
-                </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Client & Incident Identification</h2>
-              </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Client Selection */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Target Individual (Client) *</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 pl-1 flex items-center gap-2">
+                    Client Name *
+                    {shiftData && <Lock size={10} className="text-slate-300" />}
+                  </label>
                   <div className="relative">
-                    <button
-                      type="button"
-                      onClick={() => setShowClientDropdown(!showClientDropdown)}
-                      className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight flex justify-between items-center hover:bg-white hover:border-blue-200 transition-all shadow-sm"
-                    >
-                      <span className={incidentData.client_id ? "text-slate-900" : "text-slate-300"}>
-                        {incidentData.client_id ? getSelectedClientName() : "DETECT AND SELECT CLIENT"}
-                      </span>
-                      <ChevronDown size={14} className="text-slate-400" />
-                    </button>
+                    {shiftData ? (
+                      <div className="h-11 px-4 bg-slate-50 border border-slate-100 rounded-xl flex justify-between items-center shadow-sm">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 truncate">
+                          {clientData?.first_name} {clientData?.last_name}
+                        </span>
+                        <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-slate-100">Linked</span>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowClientDropdown(!showClientDropdown)}
+                        className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest flex justify-between items-center hover:bg-white hover:border-blue-200 transition-all shadow-sm"
+                      >
+                        <span className={incidentData.client_id ? "text-slate-900" : "text-slate-300"}>
+                          {incidentData.client_id ? getSelectedClientName() : "Search and select client"}
+                        </span>
+                        <ChevronDown size={14} className="text-slate-400" />
+                      </button>
+                    )}
 
                     {showClientDropdown && (
                       <div className="absolute z-20 w-full mt-2 bg-white border border-slate-100 shadow-2xl rounded-[1.5rem] overflow-hidden">
@@ -596,8 +709,8 @@ function AddIncident() {
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
                             <input
                               type="text"
-                              placeholder="SEARCH REGISTRY..."
-                              className="w-full h-10 pl-10 pr-4 bg-white border border-slate-100 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                              placeholder="Search for client..."
+                              className="w-full h-10 pl-10 pr-4 bg-white border border-slate-100 rounded-xl text-[9px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                               value={searchTerm}
                               onChange={(e) => setSearchTerm(e.target.value)}
                               autoFocus
@@ -627,7 +740,7 @@ function AddIncident() {
                                     {client.first_name} {client.last_name}
                                   </div>
                                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                                    NDIS TOKEN: {client.ndis_number || 'UNKNOWN'}
+                                    NDIS Number: {client.ndis_number || 'UNKNOWN'}
                                   </div>
                                 </div>
                                 {incidentData.client_id === client.id && (
@@ -646,7 +759,7 @@ function AddIncident() {
 
                 {/* Event Date */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Observation Date *</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Report Date *</label>
                   <div className="relative">
                     <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -654,7 +767,7 @@ function AddIncident() {
                       name="event_date"
                       value={incidentData.event_date}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                       required
                       disabled={isSubmitting}
                     />
@@ -663,17 +776,17 @@ function AddIncident() {
 
                 {/* Hierarchy */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Organizational Node *</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Category *</label>
                   <div className="relative">
                     <select
                       name="hierarchy_id"
                       value={incidentData.hierarchy_id}
                       onChange={handleInputChange}
-                      className="w-full h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                      className="w-full h-11 px-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest appearance-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                       required
                       disabled={isSubmitting}
                     >
-                      <option value="" className="text-slate-300">SELECT OPERATIONAL ZONE</option>
+                      <option value="" className="text-slate-300">Select Category</option>
                       {hierarchies.map(hierarchy => (
                         <option key={hierarchy.id} value={hierarchy.id}>
                           {hierarchy.name.toUpperCase()} {hierarchy.code ? `[${hierarchy.code}]` : ''}
@@ -686,16 +799,16 @@ function AddIncident() {
 
                 {/* Subject */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Tactical Subject</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Subject</label>
                   <div className="relative">
                     <FileText size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       name="subject"
-                      placeholder="ENTER INCIDENT SUBJECT"
+                      placeholder="Incident subject..."
                       value={incidentData.subject}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
                       disabled={isSubmitting}
                     />
                   </div>
@@ -705,7 +818,7 @@ function AddIncident() {
               {/* Type of Incident */}
               <div className="space-y-4 pt-4">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                  Incident Protocol Classifications *
+                  Incident Types *
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                   {incidentTypes.map(type => (
@@ -725,7 +838,7 @@ function AddIncident() {
                       />
                       <div className={`h-4 w-4 rounded-md border-2 flex items-center justify-center transition-all ${selectedIncidentTypes.includes(type.id) ? 'bg-white border-white text-blue-600' : 'border-slate-200'
                         }`}>
-                        {selectedIncidentTypes.includes(type.id) && <Plus size={10} strokeWidth={4} />}
+                        {selectedIncidentTypes.includes(type.id) && <Check size={10} strokeWidth={4} />}
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-widest leading-none">{type.name}</span>
                     </label>
@@ -734,19 +847,26 @@ function AddIncident() {
               </div>
             </div>
 
-            {/* Section 2: Temporal & Geographic Stamps */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
-                  <Clock size={16} />
+            {/* Section 2: When & Where */}
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <Clock size={18} />
                 </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Temporal & Geographic Context</h2>
+                <div>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                    When & Where
+                  </h3>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Temporal & Geographic Context
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Incident Date */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Temporal Occurrence Date *</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Date of Incident *</label>
                   <div className="relative">
                     <Calendar size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -754,7 +874,7 @@ function AddIncident() {
                       name="incident_date"
                       value={incidentData.incident_date}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                       required
                       disabled={isSubmitting}
                     />
@@ -763,7 +883,7 @@ function AddIncident() {
 
                 {/* Time */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Temporal Stamp (Time)</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Occurrence Time</label>
                   <div className="relative">
                     <Clock size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
@@ -771,7 +891,7 @@ function AddIncident() {
                       name="incident_time"
                       value={incidentData.incident_time}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm"
                       disabled={isSubmitting}
                     />
                   </div>
@@ -779,16 +899,16 @@ function AddIncident() {
 
                 {/* Location */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Geographic Node (Location)</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Location</label>
                   <div className="relative">
                     <MapPin size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       name="location"
-                      placeholder="ENTER PRECISE LOCATION"
+                      placeholder="..."
                       value={incidentData.location}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
                       disabled={isSubmitting}
                     />
                   </div>
@@ -796,16 +916,16 @@ function AddIncident() {
 
                 {/* Witnesses */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Witness Protocol Log</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Witnesses</label>
                   <div className="relative">
                     <Users size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="text"
                       name="witnesses"
-                      placeholder="ENTER WITNESS IDENTITIES"
+                      placeholder="..."
                       value={incidentData.witnesses}
                       onChange={handleInputChange}
-                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
+                      className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm placeholder:text-slate-300"
                       disabled={isSubmitting}
                     />
                   </div>
@@ -835,7 +955,7 @@ function AddIncident() {
                       />
                       <div className={`h-4 w-4 rounded-md border-2 flex items-center justify-center transition-all ${selectedEmergencyAssistance.includes(type.id) ? 'bg-white border-white text-rose-500' : 'border-slate-200'
                         }`}>
-                        {selectedEmergencyAssistance.includes(type.id) && <Plus size={10} strokeWidth={4} />}
+                        {selectedEmergencyAssistance.includes(type.id) && <Check size={10} strokeWidth={4} />}
                       </div>
                       <span className="text-[10px] font-black uppercase tracking-widest leading-none">{type.name}</span>
                     </label>
@@ -878,97 +998,111 @@ function AddIncident() {
                           disabled={isSubmitting}
                         />
                       </div>
-                    )}
+                )}
                   </div>
                 )}
             </div>
 
-            {/* Section 3: Narrative Vault */}
-            <div className="space-y-8">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center">
-                  <FileText size={16} />
+            {/* Section 3: Incident Narrative */}
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-amber-50 text-amber-600 rounded-xl">
+                  <FileText size={18} />
                 </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Chronological Intelligence Narrative</h2>
+                <div>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                    Incident Narrative
+                  </h3>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Detailed Event Documentation
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 gap-8">
                 {/* Incident Summary */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                    Executive Incident Abstract
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                    Incident Summary
                   </label>
                   <textarea
                     name="incident_summary"
-                    placeholder="SYNOPSIS OF TACTICAL EVENT..."
+                    placeholder="Briefly summarize what happened..."
                     value={incidentData.incident_summary}
                     onChange={handleInputChange}
                     rows="3"
-                    className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-[11px] font-bold text-slate-700 leading-relaxed focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm resize-none placeholder:text-slate-300 uppercase"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-700 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-slate-300 resize-none"
                     disabled={isSubmitting}
                   />
                 </div>
 
                 {/* Antecedent */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                    Causal Antecedents (Pre-Event Context)
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                    What happened before? (Antecedents)
                   </label>
                   <textarea
                     name="antecedent"
-                    placeholder="ENVIRONMENTAL AND BEHAVIORAL TRIGGERS..."
+                    placeholder="What triggered the incident?..."
                     value={incidentData.antecedent}
                     onChange={handleInputChange}
                     rows="3"
-                    className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-[11px] font-bold text-slate-700 leading-relaxed focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm resize-none placeholder:text-slate-300 uppercase"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-700 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-slate-300 resize-none"
                     disabled={isSubmitting}
                   />
                 </div>
 
                 {/* Incident Description */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                    Granular Tactical breakdown
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                    Detailed Description
                   </label>
                   <textarea
                     name="incident_description"
-                    placeholder="DETAILED EVENT LOGRAITHM..."
+                    placeholder="Describe the incident in detail..."
                     value={incidentData.incident_description}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-[11px] font-black text-slate-900 leading-relaxed focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm resize-none placeholder:text-slate-300 uppercase"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-black text-slate-900 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-slate-300 resize-none"
                     disabled={isSubmitting}
                   />
                 </div>
 
                 {/* De-escalation and Outcome */}
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                    Resolution Protocol & Outcome
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">
+                    Resolution & Outcome
                   </label>
                   <textarea
                     name="deescalation_outcome"
-                    placeholder="DE-ESCALATION VECTORS AND EVENT TERMINATION..."
+                    placeholder="How was it resolved?..."
                     value={incidentData.deescalation_outcome}
                     onChange={handleInputChange}
                     rows="4"
-                    className="w-full p-6 bg-slate-50 border border-slate-100 rounded-[2rem] text-[11px] font-bold text-slate-700 leading-relaxed focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all shadow-sm resize-none placeholder:text-slate-300 uppercase"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[11px] font-bold text-slate-700 leading-relaxed focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-slate-300 resize-none"
                     disabled={isSubmitting}
                   />
                 </div>
               </div>
             </div>
 
-            {/* Section 4: Digital Evidence Vault */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                  <Paperclip size={16} />
+            {/* Section 4: Attachments */}
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                  <Paperclip size={18} />
                 </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Digital Evidence Vault</h2>
+                <div>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                    Attachments
+                  </h3>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Evidence & Documentation
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2.5rem] p-10 hover:bg-white hover:border-blue-400 transition-all group overflow-hidden relative">
+              <div className="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-2xl p-8 hover:bg-white hover:border-blue-400 transition-all group overflow-hidden relative">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -979,23 +1113,23 @@ function AddIncident() {
                 />
 
                 {attachments.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center text-center relative z-10">
-                    <div className="h-16 w-16 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-slate-100 mb-6 group-hover:scale-110 transition-transform">
-                      <Upload size={28} className="text-blue-600" />
+                  <div className="flex flex-col items-center justify-center text-center py-4">
+                    <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-slate-100 mb-4 group-hover:scale-110 transition-transform">
+                      <Upload size={24} className="text-blue-600" />
                     </div>
-                    <p className="text-[12px] font-black text-slate-900 uppercase tracking-tight mb-2">
-                      Initialize Evidence Transfer
+                    <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-2">
+                      Upload Photos or Documents
                     </p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-6">
-                      Drag & Drop Binary Data or Browse Registry
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-5">
+                      Drag & drop or Click to browse
                     </p>
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="h-11 px-8 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all"
+                      className="px-6 py-2.5 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:bg-slate-800 transition-all"
                       disabled={isSubmitting}
                     >
-                      Browse Repository
+                      Browse Files
                     </button>
                   </div>
                 ) : (
@@ -1025,7 +1159,7 @@ function AddIncident() {
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 bg-slate-100 text-slate-400 rounded-xl flex items-center justify-center group-hover/item:text-blue-600 transition-colors">
                               {attachment.type?.startsWith('image/') ? (
-                                <Image size={18} />
+                                <ImageIcon size={18} />
                               ) : (
                                 <FileText size={18} />
                               )}
@@ -1079,24 +1213,31 @@ function AddIncident() {
               </div>
             </div>
 
-            {/* Section 5: Severity Classification Matrix */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-slate-900 text-white rounded-xl flex items-center justify-center">
-                  <AlertTriangle size={16} />
+            {/* Section 5: Severity Guide */}
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-slate-900 text-white rounded-xl">
+                  <AlertTriangle size={18} />
                 </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Severity Classification Matrix</h2>
+                <div>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                    Severity Guide
+                  </h3>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Rating Reference
+                  </p>
+                </div>
               </div>
 
-              <div className="bg-white border border-slate-100 rounded-[2.5rem] overflow-hidden shadow-sm">
+              <div className="bg-slate-50/50 border border-slate-100 rounded-xl overflow-hidden shadow-sm mb-6">
                 <div className="overflow-x-auto">
                   <table className="w-full border-collapse">
                     <thead>
                       <tr>
-                        <th className="bg-emerald-500 text-white p-4 text-[10px] font-black uppercase tracking-widest border-r border-emerald-400/30">Alpha (Low)</th>
-                        <th className="bg-amber-500 text-white p-4 text-[10px] font-black uppercase tracking-widest border-r border-amber-400/30">Beta (Medium)</th>
-                        <th className="bg-orange-500 text-white p-4 text-[10px] font-black uppercase tracking-widest border-r border-orange-400/30">Gamma (High)</th>
-                        <th className="bg-rose-600 text-white p-4 text-[10px] font-black uppercase tracking-widest">Omega (Critical)</th>
+                        <th className="bg-emerald-500 text-white p-3 text-[9px] font-black uppercase tracking-widest border-r border-emerald-400/30">Low</th>
+                        <th className="bg-amber-500 text-white p-3 text-[9px] font-black uppercase tracking-widest border-r border-amber-400/30">Medium</th>
+                        <th className="bg-orange-500 text-white p-3 text-[9px] font-black uppercase tracking-widest border-r border-orange-400/30">High</th>
+                        <th className="bg-rose-600 text-white p-3 text-[9px] font-black uppercase tracking-widest">Critical</th>
                       </tr>
                     </thead>
 
@@ -1156,9 +1297,8 @@ function AddIncident() {
               </div>
 
               {/* Incident Rating Selection */}
-              <div className="space-y-4">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                  Tactical Severity Designation *
+                <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3 block">
+                  Incident Rating *
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {["Low", "Medium", "High", "Critical"].map(level => {
@@ -1178,7 +1318,8 @@ function AddIncident() {
                           onChange={handleInputChange}
                           className="sr-only peer"
                         />
-                        <div className={`h-11 flex items-center justify-center rounded-2xl border border-slate-100 bg-white transition-all shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-600 peer-checked:text-white ${colors[level]}`}>
+                        <div className={`h-11 flex items-center justify-center rounded-2xl border border-slate-100 bg-white transition-all shadow-sm text-[10px] font-black uppercase tracking-widest text-slate-600 peer-checked:text-white ${colors[level]} relative gap-2`}>
+                          {incidentData.incident_rating === level.toLowerCase() && <Check size={12} strokeWidth={4} />}
                           {level}
                         </div>
                       </label>
@@ -1186,26 +1327,29 @@ function AddIncident() {
                   })}
                 </div>
               </div>
-            </div>
 
-            {/* Section 6: PRN & Restrictive Intervention */}
+            {/* Section 6: PRN & Interventions */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* PRN Section */}
-              <div className="space-y-6 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <AlertTriangle size={80} />
-                </div>
-                <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-8 w-8 bg-blue-500 text-white rounded-xl flex items-center justify-center">
-                    <Plus size={16} />
+              <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                  <div className="p-2 bg-blue-500 text-white rounded-xl">
+                    <Plus size={18} />
                   </div>
-                  <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">PRN Protocol</h2>
+                  <div>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                      PRN Information
+                    </h3>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                      Medication Details
+                    </p>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 relative z-10">
                   {/* PRN Approved */}
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">PRN Authorized? *</label>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">PRN Authorized? *</label>
                     <div className="flex gap-2">
                       {["yes", "no"].map(val => (
                         <label key={val} className="flex-1 relative cursor-pointer">
@@ -1217,7 +1361,8 @@ function AddIncident() {
                             onChange={handleInputChange}
                             className="sr-only peer"
                           />
-                          <div className="h-10 flex items-center justify-center rounded-xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 shadow-sm peer-checked:shadow-blue-600/20">
+                          <div className="h-10 flex items-center justify-center rounded-xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 shadow-sm peer-checked:shadow-blue-600/20 gap-2">
+                            {incidentData.prn_approved === val && <Check size={12} strokeWidth={4} />}
                             {val}
                           </div>
                         </label>
@@ -1227,7 +1372,7 @@ function AddIncident() {
 
                   {/* PRN Provided */}
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Deployment Status *</label>
+                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Deployment Status *</label>
                     <div className="flex flex-col gap-2">
                       {["provided", "not provided", "refused"].map(val => (
                         <label key={val} className="relative cursor-pointer">
@@ -1239,7 +1384,8 @@ function AddIncident() {
                             onChange={handleInputChange}
                             className="sr-only peer"
                           />
-                          <div className="h-10 flex items-center justify-center rounded-xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 shadow-sm peer-checked:shadow-blue-600/20">
+                          <div className="h-10 flex items-center justify-center rounded-xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 shadow-sm peer-checked:shadow-blue-600/20 gap-2">
+                            {incidentData.prn_provided === val && <Check size={12} strokeWidth={4} />}
                             {val}
                           </div>
                         </label>
@@ -1250,29 +1396,33 @@ function AddIncident() {
 
                 {/* PRN Notes */}
                 <div className="space-y-2 relative z-10">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">PRN Deployment Intel</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">PRN Notes</label>
                   <textarea
                     name="prn_notes"
-                    placeholder="ENTER PRN DEPLOYMENT DETAILS..."
+                    placeholder="Enter PRN details..."
                     value={incidentData.prn_notes}
                     onChange={handleInputChange}
                     rows="3"
-                    className="w-full p-4 bg-white border border-slate-100 rounded-2xl text-[10px] font-bold text-slate-600 leading-relaxed focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all shadow-sm resize-none placeholder:text-slate-300 uppercase"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-600 leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-300 resize-none"
                     disabled={isSubmitting}
                   />
                 </div>
               </div>
 
               {/* Physical Intervention Section */}
-              <div className="space-y-6 bg-slate-900 p-8 rounded-[2.5rem] text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-10">
-                  <AlertTriangle size={80} className="text-rose-500" />
-                </div>
-                <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-8 w-8 bg-rose-500 text-white rounded-xl flex items-center justify-center">
-                    <AlertTriangle size={16} />
+              <div className="bg-slate-900 rounded-[1.5rem] p-5 lg:p-6 text-white shadow-xl relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
+                  <div className="p-2 bg-rose-500 text-white rounded-xl">
+                    <AlertTriangle size={18} />
                   </div>
-                  <h2 className="text-[12px] font-black text-white/80 uppercase tracking-widest">Restrictive Practice Protocol</h2>
+                  <div>
+                    <h3 className="text-[11px] font-black text-white/90 uppercase tracking-wide">
+                      Restrictive Intervention
+                    </h3>
+                    <p className="text-[8px] font-bold text-white/40 uppercase tracking-widest mt-0.5">
+                      Safety Protocol
+                    </p>
+                  </div>
                 </div>
 
                 {/* Did you physically hold the client? */}
@@ -1289,7 +1439,8 @@ function AddIncident() {
                           onChange={handleInputChange}
                           className="sr-only peer"
                         />
-                        <div className="h-10 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 shadow-sm peer-checked:shadow-rose-600/40">
+                        <div className="h-10 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 shadow-sm peer-checked:shadow-rose-600/40 gap-2">
+                          {incidentData.physical_intervention === val && <Check size={12} strokeWidth={4} />}
                           {val}
                         </div>
                       </label>
@@ -1312,7 +1463,8 @@ function AddIncident() {
                             onChange={handleInputChange}
                             className="sr-only peer"
                           />
-                          <div className="h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 shadow-sm">
+                          <div className="h-9 flex items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white peer-checked:border-rose-600 shadow-sm gap-2">
+                            {incidentData.physical_intervention_type === type.toLowerCase() && <Check size={12} strokeWidth={4} />}
                             {type}
                           </div>
                         </label>
@@ -1351,7 +1503,8 @@ function AddIncident() {
                                 onChange={handleInputChange}
                                 className="sr-only peer"
                               />
-                              <div className="h-8 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white">
+                              <div className="h-8 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white gap-2">
+                                {incidentData.client_injured === val && <Check size={10} strokeWidth={4} />}
                                 {val}
                               </div>
                             </label>
@@ -1372,7 +1525,8 @@ function AddIncident() {
                                 onChange={handleInputChange}
                                 className="sr-only peer"
                               />
-                              <div className="h-8 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white">
+                              <div className="h-8 flex items-center justify-center rounded-lg border border-white/10 bg-white/5 text-[9px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-rose-600 peer-checked:text-white gap-2">
+                                {incidentData.staff_injured === val && <Check size={10} strokeWidth={4} />}
                                 {val}
                               </div>
                             </label>
@@ -1385,19 +1539,25 @@ function AddIncident() {
               </div>
             </div>
 
-            {/* Section 7: Tactical Follow-Up */}
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
-                  <Save size={16} />
+            {/* Section 7: Follow-Up & Reporting */}
+            <div className="bg-white border border-slate-100 rounded-[1.5rem] p-5 lg:p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                  <Save size={18} />
                 </div>
-                <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Tactical Follow-Up & Authorization</h2>
+                <div>
+                  <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                    Follow-Up & Reporting
+                  </h3>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                    Authorization & Next Steps
+                  </p>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-slate-50/50 p-8 rounded-[2.5rem] border border-slate-100">
-                {/* Follow up required */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Follow-Up Required?</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Follow-Up Required?</label>
                   <div className="flex gap-2">
                     {["yes", "no"].map(val => (
                       <label key={val} className="flex-1 relative cursor-pointer">
@@ -1409,7 +1569,8 @@ function AddIncident() {
                           onChange={handleInputChange}
                           className="sr-only peer"
                         />
-                        <div className="h-11 flex items-center justify-center rounded-2xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white shadow-sm peer-checked:shadow-blue-600/20">
+                        <div className="h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white shadow-sm peer-checked:shadow-blue-600/20 gap-2">
+                          {incidentData.follow_up_required === val && <Check size={12} strokeWidth={4} />}
                           {val}
                         </div>
                       </label>
@@ -1417,9 +1578,8 @@ function AddIncident() {
                   </div>
                 </div>
 
-                {/* Management contacted */}
                 <div className="space-y-4">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Command Hierarchy Contacted? *</label>
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Management Contacted? *</label>
                   <div className="flex gap-2">
                     {["yes", "no"].map(val => (
                       <label key={val} className="flex-1 relative cursor-pointer">
@@ -1431,7 +1591,8 @@ function AddIncident() {
                           onChange={handleInputChange}
                           className="sr-only peer"
                         />
-                        <div className="h-11 flex items-center justify-center rounded-2xl border border-white bg-white text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white shadow-sm peer-checked:shadow-blue-600/20">
+                        <div className="h-11 flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50 text-[10px] font-black uppercase tracking-widest text-slate-400 transition-all peer-checked:bg-blue-600 peer-checked:text-white shadow-sm peer-checked:shadow-blue-600/20 gap-2">
+                          {incidentData.management_contacted === val && <Check size={12} strokeWidth={4} />}
                           {val}
                         </div>
                       </label>
@@ -1441,92 +1602,85 @@ function AddIncident() {
               </div>
             </div>
 
-            {/* Section: Proxy Authentication (Admin Only) */}
+            {/* Proxy Authentication (Admin Only) */}
             {isAdmin && (
-              <div className="space-y-6 bg-amber-50/50 p-8 rounded-[2.5rem] border border-amber-100 shadow-sm relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-5">
-                  <Users size={80} className="text-amber-600" />
-                </div>
-                <div className="flex items-center gap-3 relative z-10">
-                  <div className="h-8 w-8 bg-amber-600 text-white rounded-xl flex items-center justify-center">
-                    <Users size={16} />
+              <div className="bg-amber-50/50 p-5 lg:p-6 rounded-[1.5rem] border border-amber-100 shadow-sm relative overflow-hidden">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-amber-200/50">
+                  <div className="p-2 bg-amber-600 text-white rounded-xl">
+                    <Users size={18} />
                   </div>
                   <div>
-                    <h2 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Proxy Authentication</h2>
-                    <p className="text-[9px] font-black text-amber-600 uppercase tracking-widest mt-0.5">Administrative Overrule Protocol Active</p>
+                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-wide">
+                      Proxy Authentication
+                    </h3>
+                    <p className="text-[8px] font-bold text-amber-600 uppercase tracking-widest mt-0.5">
+                      Admin Access Required
+                    </p>
                   </div>
                 </div>
 
-                <div className="bg-white p-6 rounded-[2rem] border border-amber-50 shadow-sm relative z-10">
-                  <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">
-                      Target Personnel Accountability *
-                    </label>
-                    <div className="relative">
-                      <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                      <select
-                        name="created_by"
-                        value={incidentData.created_by}
-                        onChange={handleInputChange}
-                        className="w-full h-11 pl-11 pr-4 bg-slate-50 border border-slate-100 rounded-2xl text-[11px] font-black uppercase tracking-tight appearance-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 outline-none transition-all"
-                        required
-                        disabled={isSubmitting}
-                      >
-                        <option value="">SELECT ACCOUNTABLE STAFF MEMBER</option>
-                        {staffList.map(staff => (
-                          <option key={staff.id} value={staff.id}>
-                            {staff.name.toUpperCase()} [{staff.role?.toUpperCase() || 'STAFF'}]
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                    </div>
-                    <div className="flex items-start gap-3 p-4 bg-amber-50/50 rounded-xl border border-amber-100/50">
-                      <div className="h-5 w-5 bg-amber-600 text-white rounded-full flex items-center justify-center text-[10px] font-bold shrink-0">!</div>
-                      <p className="text-[9px] font-bold text-slate-600 uppercase tracking-tight leading-normal">
-                        Administrative Notice: You are authenticated to log entries on behalf of subordinate or peer personnel.
-                        Select the specific identity responsible for the shift in question.
-                      </p>
-                    </div>
+                <div className="space-y-4">
+                  <label className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                    Log for Staff Member *
+                  </label>
+                  <div className="relative">
+                    <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                    <select
+                      name="created_by"
+                      value={incidentData.created_by}
+                      onChange={handleInputChange}
+                      className="w-full h-11 pl-11 pr-10 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest appearance-none focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
+                      required
+                      disabled={isSubmitting}
+                    >
+                      <option value="">SELECT STAFF MEMBER</option>
+                      {staffList.map(staff => (
+                        <option key={staff.id} value={staff.id}>
+                          {staff.name.toUpperCase()}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
             )}
 
 
-            {/* Tactical Footer Actions */}
-            <div className="pt-12 border-t border-slate-100">
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-8">
-                <div className="flex items-center gap-3">
+            {/* Form Footer Actions */}
+            <div className="py-8 lg:py-10 border-t border-slate-100 mt-6 lg:mt-10">
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+                <div className="flex items-center gap-3 order-2 sm:order-1">
                   <div className="h-2 w-2 bg-blue-600 rounded-full animate-pulse" />
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                    Validation Protocol: OK • Mandatory Fields Detected
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                    Validation Check: Ready to submit
                   </p>
                 </div>
 
-                <button
-                  type="submit"
-                  className="h-14 px-12 bg-slate-900 hover:bg-black text-white rounded-[1.5rem] flex items-center gap-4 transition-all shadow-2xl shadow-slate-900/20 group disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-3">
-                      <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-                      <span className="text-[11px] font-black uppercase tracking-[0.2em]">Encrypting & Submitting...</span>
-                    </div>
-                  ) : (
-                    <>
-                      <span className="text-[11px] font-black uppercase tracking-[0.2em]">Commit Incident to Registry</span>
-                      <Save size={18} className="group-hover:scale-110 transition-transform" />
-                    </>
-                  )}
-                </button>
+                <div className="flex items-center gap-3 w-full sm:w-auto order-1 sm:order-2">
+                  <button
+                    type="submit"
+                    className="w-full sm:w-auto h-14 px-10 bg-slate-900 hover:bg-black text-white rounded-2xl flex items-center justify-center gap-4 transition-all shadow-xl shadow-slate-900/10 group disabled:opacity-50"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <div className="h-5 w-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                        <span className="text-[11px] font-black uppercase tracking-widest">Saving Incident...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[11px] font-black uppercase tracking-widest">Save Incident</span>
+                        <Save size={18} className="group-hover:scale-110 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </form>
         </div>
       </div>
-    </div>
   );
 }
 

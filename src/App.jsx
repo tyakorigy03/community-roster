@@ -1,6 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
 import Login from "./pages/login";
+import Onboarding from "./pages/onboarding";
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
 import Layout from "./components/layout";
 import Index from "./pages";
 import StaffsPage from "./pages/staff";
@@ -66,6 +69,9 @@ function App() {
             <Route path="/clock_in_out/:shift_id/:staff_id" element={<Layout><ClockInOutPage /></Layout>} />
             <Route path="/profile" element={<Layout><StaffProfile /></Layout>} />
             <Route path="/login" element={<Login />} />
+            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
             <Route path="*" element={<div>Page Not Found</div>} />
           </Routes>
         </>

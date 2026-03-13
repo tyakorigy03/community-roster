@@ -17,6 +17,7 @@ import {
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 
 // Import the modal components
 import StaffProfileModal from "../components/StaffProfileModal";
@@ -24,6 +25,7 @@ import SendInviteModal from "../components/SendInviteModal";
 import DeactivateStaffModal from "../components/DeactivateStaffModal";
 
 function StaffsPage() {
+  const { currentStaff } = useUser();
   const [searchTerm, setSearchTerm] = useState("");
   const [staffs, setStaffs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +41,10 @@ function StaffsPage() {
 
   // Fetch staff from database
   useEffect(() => {
-    fetchStaffs();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchStaffs();
+    }
+  }, [currentStaff]);
 
   const fetchStaffs = async () => {
     try {
@@ -49,6 +53,7 @@ function StaffsPage() {
         .from("staff")
         .select("*")
         .eq("is_active", true)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -59,7 +64,8 @@ function StaffsPage() {
           const { count, error: docsError } = await supabase
             .from("staff_documents")
             .select("*", { count: 'exact', head: true })
-            .eq("staff_id", staff.id);
+            .eq("staff_id", staff.id)
+            .eq("tenant_id", currentStaff.tenant_id);
 
           return {
             ...staff,
@@ -115,7 +121,8 @@ function StaffsPage() {
           is_active: false,
           deactivated_at: new Date().toISOString()
         })
-        .eq("id", staffToDeactivate.id);
+        .eq("id", staffToDeactivate.id)
+        .eq("tenant_id", currentStaff.tenant_id);
 
       if (error) throw error;
 

@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext';
 import { generateIncidentReportPDF } from '../utils/incidentReportPdf';
 
 const formatDate = (dateString) => {
@@ -68,6 +69,7 @@ const getSeverityBadge = (rating) => {
 export default function ProfessionalIncidentView() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStaff: user } = useUser();
   const [loading, setLoading] = useState(true);
   const [incident, setIncident] = useState(null);
   const [client, setClient] = useState(null);
@@ -86,10 +88,10 @@ export default function ProfessionalIncidentView() {
   const [selectedEmails, setSelectedEmails] = useState([]);
 
   useEffect(() => {
-    if (id) {
+    if (id && user?.tenant_id) {
       fetchIncidentData();
     }
-  }, [id]);
+  }, [id, user?.tenant_id]);
 
   useEffect(() => {
     fetchGovernmentEmails();
@@ -104,6 +106,7 @@ export default function ProfessionalIncidentView() {
         .from('incidents')
         .select('*')
         .eq('id', id)
+        .eq('tenant_id', user.tenant_id)
         .single();
 
       if (incidentError) throw incidentError;
@@ -195,12 +198,12 @@ export default function ProfessionalIncidentView() {
       setDeleting(true);
 
       // Delete related records first
-      await supabase.from('incident_attachments').delete().eq('incident_id', id);
-      await supabase.from('incident_type_relations').delete().eq('incident_id', id);
-      await supabase.from('incident_emergency_assistance').delete().eq('incident_id', id);
+      await supabase.from('incident_attachments').delete().eq('incident_id', id).eq('tenant_id', user.tenant_id);
+      await supabase.from('incident_type_relations').delete().eq('incident_id', id).eq('tenant_id', user.tenant_id);
+      await supabase.from('incident_emergency_assistance').delete().eq('incident_id', id).eq('tenant_id', user.tenant_id);
 
       // Delete the incident
-      const { error } = await supabase.from('incidents').delete().eq('id', id);
+      const { error } = await supabase.from('incidents').delete().eq('id', id).eq('tenant_id', user.tenant_id);
 
       if (error) throw error;
 
@@ -244,6 +247,7 @@ export default function ProfessionalIncidentView() {
         .select('*')
         .eq('report_type', 'incident')
         .eq('is_active', true)
+        .eq('tenant_id', user.tenant_id)
         .order('department_name');
 
       if (error) throw error;
@@ -276,7 +280,8 @@ export default function ProfessionalIncidentView() {
             department_name: emailForm.department_name,
             email_address: emailForm.email_address,
           })
-          .eq('id', emailForm.id);
+          .eq('id', emailForm.id)
+          .eq('tenant_id', user.tenant_id);
 
         if (error) throw error;
         toast.success('Email updated successfully');
@@ -289,6 +294,7 @@ export default function ProfessionalIncidentView() {
             email_address: emailForm.email_address,
             report_type: 'incident',
             is_active: true,
+            tenant_id: user.tenant_id
           });
 
         if (error) throw error;
@@ -310,7 +316,8 @@ export default function ProfessionalIncidentView() {
       const { error } = await supabase
         .from('government_report_emails')
         .delete()
-        .eq('id', emailId);
+        .eq('id', emailId)
+        .eq('tenant_id', user.tenant_id);
 
       if (error) throw error;
       toast.success('Email deleted successfully');

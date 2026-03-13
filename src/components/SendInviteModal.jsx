@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useUser } from "../context/UserContext";
 import { X, Send, Mail, ShieldCheck, AlertCircle, ChevronRight, Fingerprint } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -6,6 +7,7 @@ const EDGE_FUNCTION_URL =
   "https://lyuhhztaemndephpgjaj.supabase.co/functions/v1/create_user";
 
 function SendInviteModal({ staff, onClose }) {
+  const { currentStaff } = useUser();
   const [loading, setLoading] = useState(false);
 
   const handleSendInvite = async () => {
@@ -21,6 +23,7 @@ function SendInviteModal({ staff, onClose }) {
           staff_id: staff.id,
           email: staff.email,
           name: staff.name,
+          tenant_id: currentStaff?.tenant_id,
         }),
       });
 

@@ -1,8 +1,10 @@
 import { Camera, UserPlus, X, Settings as SettingsIcon, Shield, Save,ChevronDown ,ArrowUpRight, Users, AlertCircle, ChevronRight, ShieldCheck, Lock, LayoutDashboard, Database, BellRing, Smartphone, CheckCircle2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useUser } from "../context/UserContext";
 
 export default function SettingsPage() {
+  const { currentStaff } = useUser();
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState([]);
@@ -24,6 +26,7 @@ export default function SettingsPage() {
       const { data: settingsData, error: settingsError } = await supabase
         .from('settings')
         .select('*')
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('id');
 
       if (settingsError) throw settingsError;
@@ -32,6 +35,7 @@ export default function SettingsPage() {
       const { data: staffData, error: staffError } = await supabase
         .from('staff')
         .select('*')
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('name');
 
       if (staffError) throw staffError;
@@ -65,10 +69,11 @@ export default function SettingsPage() {
       const newEnabledState = !settingToUpdate.enabled;
 
       // Update setting in Supabase settings table
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('settings')
         .update({ enabled: newEnabledState })
         .eq('id', settingId)
+        .eq('tenant_id', currentStaff.tenant_id)
         .select();
 
       if (error) throw error;
@@ -118,10 +123,11 @@ export default function SettingsPage() {
       }
 
       // Update staff role to 'admin' in Supabase staff table
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('staff')
         .update({ role: "admin" })
         .eq('id', parseInt(newAdminId))
+        .eq('tenant_id', currentStaff.tenant_id)
         .select();
 
       if (error) throw error;
@@ -159,10 +165,11 @@ export default function SettingsPage() {
       }
 
       // Update staff role back to 'staff' in Supabase staff table
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('staff')
         .update({ role: "staff" })
         .eq('id', staffId)
+        .eq('tenant_id', currentStaff.tenant_id)
         .select();
 
       if (error) throw error;

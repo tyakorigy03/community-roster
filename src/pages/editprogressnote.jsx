@@ -94,6 +94,7 @@ function EditProgressNote() {
             staff:created_by(name, email, role)
           `)
           .eq("id", id)
+          .eq("tenant_id", currentStaff.tenant_id)
           .single();
 
         if (noteError) throw noteError;
@@ -146,6 +147,7 @@ function EditProgressNote() {
               shift_type:shift_type_id(name, id)
             `)
             .eq('id', noteData.shift_id)
+            .eq('tenant_id', currentStaff.tenant_id)
             .single();
 
           if (!shiftError && shiftData) {
@@ -163,7 +165,7 @@ function EditProgressNote() {
     };
 
     fetchProgressNote();
-  }, [id, currentStaff, navigate]);
+  }, [id, currentStaff?.tenant_id, navigate]);
 
   // Fetch initial data
   useEffect(() => {
@@ -174,6 +176,7 @@ function EditProgressNote() {
           .from("clients")
           .select("id, first_name, last_name, ndis_number")
           .eq("is_active", true)
+          .eq("tenant_id", currentStaff.tenant_id)
           .order("first_name", { ascending: true });
 
         if (clientsError) throw clientsError;
@@ -185,6 +188,7 @@ function EditProgressNote() {
           .from("hierarchy")
           .select("id, name, code")
           .eq("is_active", true)
+          .eq("tenant_id", currentStaff.tenant_id)
           .order("sort_order", { ascending: true })
           .order("name", { ascending: true });
 
@@ -196,6 +200,7 @@ function EditProgressNote() {
           .from("shift_types")
           .select("*")
           .eq("is_active", true)
+          .eq("tenant_id", currentStaff.tenant_id)
           .order("sort_order", { ascending: true });
 
         if (shiftTypesError) throw shiftTypesError;
@@ -207,6 +212,7 @@ function EditProgressNote() {
             .from("staff")
             .select("id, name, email, role")
             .eq("is_active", true)
+            .eq("tenant_id", currentStaff.tenant_id)
             .order("name", { ascending: true });
 
           if (staffError) throw staffError;
@@ -333,6 +339,7 @@ function EditProgressNote() {
           ...(isAdmin ? { created_by: createdBy } : {})
         })
         .eq("id", id)
+        .eq("tenant_id", currentStaff.tenant_id)
         .select()
         .single();
 
@@ -429,7 +436,7 @@ function EditProgressNote() {
         </div>
       </div>
 
-      <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+      <div className="p-4 lg:p-6 max-w-4xl mx-auto">
         {/* Permission Warning */}
         {!canEdit && (
           <div className="mb-6 bg-white border border-red-100 rounded-[1.5rem] p-5 shadow-sm">

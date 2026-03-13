@@ -23,10 +23,12 @@ import axios from "axios";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 
 function EditClient() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStaff: user } = useUser();
   
   const [clientData, setClientData] = useState({
     // Core Identity
@@ -77,10 +79,10 @@ function EditClient() {
 
   // Fetch client data on mount
   useEffect(() => {
-    if (id) {
+    if (id && user?.tenant_id) {
       fetchClientData();
     }
-  }, [id]);
+  }, [id, user?.tenant_id]);
 
   const fetchClientData = async () => {
     try {
@@ -91,6 +93,7 @@ function EditClient() {
         .from("clients")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", user.tenant_id)
         .single();
 
       if (clientError) throw clientError;
@@ -135,6 +138,7 @@ function EditClient() {
           .from("documents")
           .select("*")
           .eq("id", client.ndis_plan_document_id)
+          .eq("tenant_id", user.tenant_id)
           .single();
 
         if (!docError && document) {
@@ -249,7 +253,8 @@ function EditClient() {
               file_url: ndisPlanDocumentUrl,
               updated_at: new Date().toISOString()
             })
-            .eq("id", existingNdisDocument.id);
+            .eq("id", existingNdisDocument.id)
+            .eq("tenant_id", user.tenant_id);
 
           if (docError) throw docError;
         } else {
@@ -262,7 +267,8 @@ function EditClient() {
               document_type: "NDIS_PLAN",
               uploaded_at: new Date().toISOString(),
               owner_type: 'client',
-              owner_id: id
+              owner_id: id,
+              tenant_id: user.tenant_id
             }])
             .select()
             .single();
@@ -299,7 +305,8 @@ function EditClient() {
           is_active: clientData.is_active,
           updated_at: new Date().toISOString()
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", user.tenant_id);
 
       if (clientError) throw clientError;
 
@@ -319,7 +326,8 @@ function EditClient() {
       const { error } = await supabase
         .from("clients")
         .delete()
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", user.tenant_id);
 
       if (error) throw error;
 

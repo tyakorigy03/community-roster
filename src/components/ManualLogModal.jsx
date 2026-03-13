@@ -134,7 +134,8 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                 clock_out_photo_url: form.clock_out_photo || null,
                 status: 'completed',
                 approved: true,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
+                tenant_id: shift.tenant_id
             };
 
             // 2. Check if staff_shift exists
@@ -142,6 +143,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                 .from('staff_shifts')
                 .select('id')
                 .eq('shift_id', shift.id)
+                .eq('tenant_id', shift.tenant_id)
                 .maybeSingle();
 
             let error;
@@ -149,7 +151,8 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                 const { error: err } = await supabase
                     .from('staff_shifts')
                     .update(payload)
-                    .eq('id', existing.id);
+                    .eq('id', existing.id)
+                    .eq('tenant_id', shift.tenant_id);
                 error = err;
             } else {
                 const { error: err } = await supabase

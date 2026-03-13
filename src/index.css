@@ -105,16 +105,57 @@ body {
   overscroll-behavior: contain;
 }
 
+/* Custom Scrollbar for premium feel */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+/* Base Body Styles */
+html,
 body {
-  overscroll-behavior-y: contain;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #ffffff;
+  color: #0f172a;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-* {
-  -webkit-tap-highlight-color: transparent;
+/* Utility Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  * {
-    scroll-behavior: smooth;
-  }
+.animate-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* Shadow utilities for premium depth */
+.premium-shadow-sm {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.premium-shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+}
+/* Utility for hiding scrollbars */
+
+@media (max-width: 768px) {
+  .layout-main {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) 
+  } 
 }

@@ -28,6 +28,7 @@ import {
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { toast } from 'react-toastify';
+import { useUser } from '../context/UserContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -296,6 +297,7 @@ function FilterSidebar({ filters, onFilterChange, clients, hierarchies, statusOp
 
 // Main Progress Notes Component
 export default function ProgressNotesList() {
+  const { currentStaff } = useUser();
   const navigate = useNavigate();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -330,8 +332,10 @@ export default function ProgressNotesList() {
   ];
 
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchInitialData();
+    }
+  }, [currentStaff]);
 
   useEffect(() => {
     fetchNotes();
@@ -344,6 +348,7 @@ export default function ProgressNotesList() {
         .from('clients')
         .select('id, first_name, last_name')
         .eq('is_active', true)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('first_name', { ascending: true });
 
       if (clientsError) throw clientsError;
@@ -353,6 +358,7 @@ export default function ProgressNotesList() {
         .from('hierarchy')
         .select('id, name, code')
         .eq('is_active', true)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('name', { ascending: true });
 
       if (hierarchiesError) throw hierarchiesError;
@@ -377,7 +383,8 @@ export default function ProgressNotesList() {
           hierarchy:hierarchy_id(name, code),
           shift_type:shift_type_id(name),
           attachments:progress_note_attachments(count)
-        `, { count: 'exact' });
+        `, { count: 'exact' })
+        .eq('tenant_id', currentStaff.tenant_id);
 
       if (filters.search) {
         query = query.or(`subject.ilike.%${filters.search}%,shift_notes.ilike.%${filters.search}%`);
@@ -483,6 +490,7 @@ export default function ProgressNotesList() {
       const { data: notesData, error } = await supabase
         .from('progress_notes')
         .select(`*, client:client_id(first_name, last_name), staff:created_by(name), hierarchy:hierarchy_id(name)`)
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

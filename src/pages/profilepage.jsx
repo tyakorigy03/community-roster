@@ -92,6 +92,7 @@ function StaffProfile() {
         .from("staff")
         .select("*")
         .eq("id", user.id)
+        .eq("tenant_id", user.tenant_id)
         .single();
 
       if (staffError) throw staffError;
@@ -104,7 +105,8 @@ function StaffProfile() {
       const { data: documents, error: docError } = await supabase
         .from("staff_documents")
         .select("*")
-        .eq("staff_id", staff.id);
+        .eq("staff_id", staff.id)
+        .eq("tenant_id", user.tenant_id);
 
       if (docError) throw docError;
 
@@ -229,7 +231,8 @@ function StaffProfile() {
         const { error } = await supabase
           .from("staff_documents")
           .delete()
-          .eq("id", doc.id);
+          .eq("id", doc.id)
+          .eq("tenant_id", user.tenant_id);
 
         if (error) throw error;
 
@@ -390,7 +393,8 @@ function StaffProfile() {
           profile_picture: profilePicUrl,
           updated_at: new Date().toISOString()
         })
-        .eq("id", staffData.id);
+        .eq("id", staffData.id)
+        .eq("tenant_id", user.tenant_id);
 
       if (staffError) throw staffError;
 
@@ -408,7 +412,8 @@ function StaffProfile() {
                 expiry_date: doc.expiry || null,
                 updated_at: new Date().toISOString()
               })
-              .eq("id", doc.id);
+              .eq("id", doc.id)
+              .eq("tenant_id", user.tenant_id);
 
             if (updateError) throw updateError;
           } else {
@@ -418,7 +423,8 @@ function StaffProfile() {
                 staff_id: staffData.id,
                 document_name: docName,
                 file_url: url,
-                expiry_date: doc.expiry || null
+                expiry_date: doc.expiry || null,
+                tenant_id: user.tenant_id
               }]);
 
             if (insertError) throw insertError;
@@ -430,7 +436,8 @@ function StaffProfile() {
               expiry_date: doc.expiry,
               updated_at: new Date().toISOString()
             })
-            .eq("id", doc.id);
+            .eq("id", doc.id)
+            .eq("tenant_id", user.tenant_id);
 
           if (updateError) throw updateError;
         }

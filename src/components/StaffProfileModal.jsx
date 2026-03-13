@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { X, Mail, Phone, MapPin, Calendar, User, FileText, Download, Eye, AlertCircle, DollarSign, ShieldCheck, ChevronRight, Briefcase } from "lucide-react";
 import { supabase } from "../lib/supabase";
+import { useUser } from "../context/UserContext";
 
 function StaffProfileModal({ staff, onClose }) {
+  const { currentStaff } = useUser();
   const [documents, setDocuments] = useState([]);
   const [payRates, setPayRates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,8 @@ function StaffProfileModal({ staff, onClose }) {
       const { data: docs, error: docsError } = await supabase
         .from("staff_documents")
         .select("*")
-        .eq("staff_id", staff.id);
+        .eq("staff_id", staff.id)
+        .eq("tenant_id", currentStaff?.tenant_id);
 
       if (docsError) throw docsError;
       setDocuments(docs || []);
@@ -101,6 +104,7 @@ function StaffProfileModal({ staff, onClose }) {
           pay_rate:pay_rate_id(*)
         `)
         .eq("staff_id", staff.id)
+        .eq("tenant_id", currentStaff?.tenant_id)
         .order("effective_from", { ascending: false });
 
       if (ratesError) throw ratesError;

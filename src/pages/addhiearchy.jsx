@@ -30,6 +30,7 @@ const fetchHierarchies = async () => {
     const { data, error } = await supabase
       .from("hierarchy")
       .select("id, name, code, parent_id, is_active")
+      .eq("tenant_id", currentStaff.tenant_id)
       .order("sort_order", { ascending: true })
       .order("name", { ascending: true });
 
@@ -64,7 +65,8 @@ const fetchHierarchies = async () => {
           description: hierarchyData.description,
           parent_id: hierarchyData.parent_id || null,
           is_active: hierarchyData.is_active,
-          sort_order: hierarchyData.sort_order || 0
+          sort_order: hierarchyData.sort_order || 0,
+          tenant_id: currentStaff.tenant_id
         }]);
 
       if (error) throw error;

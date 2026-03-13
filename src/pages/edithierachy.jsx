@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 function EditHierarchy() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { currentStaff } = useUser();
   
   const [hierarchyData, setHierarchyData] = useState({
     name: "",
@@ -38,6 +39,7 @@ function EditHierarchy() {
         .from("hierarchy")
         .select("*")
         .eq("id", id)
+        .eq("tenant_id", currentStaff.tenant_id)
         .single();
 
       if (hierarchyError) throw hierarchyError;
@@ -64,6 +66,7 @@ function EditHierarchy() {
         .from("hierarchy")
         .select("id, name, code, parent_id")
         .neq("id", id) // Exclude current hierarchy from parent options
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("name", { ascending: true });
 
       if (hierarchiesError) throw hierarchiesError;
@@ -108,7 +111,8 @@ function EditHierarchy() {
           sort_order: hierarchyData.sort_order || 0,
           updated_at: new Date().toISOString()
         })
-        .eq("id", id);
+        .eq("id", id)
+        .eq("tenant_id", currentStaff.tenant_id);
 
       if (error) throw error;
 
@@ -129,7 +133,8 @@ function EditHierarchy() {
         const { data: children, error: childrenError } = await supabase
           .from("hierarchy")
           .select("id")
-          .eq("parent_id", id);
+          .eq("parent_id", id)
+          .eq("tenant_id", currentStaff.tenant_id);
 
         if (childrenError) throw childrenError;
 
@@ -141,7 +146,8 @@ function EditHierarchy() {
         const { error } = await supabase
           .from("hierarchy")
           .delete()
-          .eq("id", id);
+          .eq("id", id)
+          .eq("tenant_id", currentStaff.tenant_id);
 
         if (error) throw error;
 

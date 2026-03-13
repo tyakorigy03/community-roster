@@ -81,58 +81,64 @@ function AddProgressNote() {
   // Fetch shift data if shift_id is provided
   useEffect(() => {
     const fetchShiftData = async () => {
-      if (shift_id) {
-        try {
-          const { data: shiftData, error: shiftError } = await supabase
-            .from('shifts')
-            .select(`
-              *,
-              client:client_id(first_name, last_name, ndis_number),
-              staff:staff_id(name),
-              shift_type:shift_type_id(name, id)
-            `)
-            .eq('id', shift_id)
-            .single();
+      if (!shift_id || !currentStaff?.tenant_id) return;
+      
+      // Avoid redundant fetching if already loaded
+      if (shiftData?.id === shift_id) return;
 
-          if (shiftError) throw shiftError;
+      try {
+        const { data: fetchedShift, error: shiftError } = await supabase
+          .from('shifts')
+          .select(`
+            *,
+            client:client_id(first_name, last_name, ndis_number),
+            staff:staff_id(name),
+            shift_type:shift_type_id(name, id)
+          `)
+          .eq('id', shift_id)
+          .eq('tenant_id', currentStaff.tenant_id)
+          .single();
 
-          if (shiftData) {
-            setShiftData(shiftData);
-            setClientData({
-              id: shiftData.client_id,
-              first_name: shiftData.client?.first_name,
-              last_name: shiftData.client?.last_name,
-              ndis_number: shiftData.client?.ndis_number
-            });
+        if (shiftError) throw shiftError;
 
-            // Auto-fill form with shift data
-            setProgressNoteData(prev => ({
-              ...prev,
-              client_id: shiftData.client_id,
-              event_date: new Date().toISOString().split('T')[0],
-              shift_date: shiftData.shift_date,
-              shift_start_time: shiftData.start_time?.substring(0, 5) || '',
-              shift_end_time: shiftData.end_time?.substring(0, 5) || '',
-              shift_type_id: shiftData.shift_type_id,
-              subject: `Shift on ${formatDate(shiftData.shift_date)} - ${shiftData.shift_type?.name || 'General'}`
-            }));
+        if (fetchedShift) {
+          setShiftData(fetchedShift);
+          setClientData({
+            id: fetchedShift.client_id,
+            first_name: fetchedShift.client?.first_name,
+            last_name: fetchedShift.client?.last_name,
+            ndis_number: fetchedShift.client?.ndis_number
+          });
 
-            toast.success('Shift data loaded successfully');
-          }
-        } catch (error) {
-          console.error("Error fetching shift data:", error);
-          toast.error("Failed to load shift data. Please fill manually.");
+          // Auto-fill form with shift data
+          setProgressNoteData(prev => ({
+            ...prev,
+            client_id: fetchedShift.client_id,
+            event_date: new Date().toISOString().split('T')[0],
+            shift_date: fetchedShift.shift_date,
+            shift_start_time: fetchedShift.start_time?.substring(0, 5) || '',
+            shift_end_time: fetchedShift.end_time?.substring(0, 5) || '',
+            shift_type_id: fetchedShift.shift_type_id,
+            subject: `Shift on ${formatDate(fetchedShift.shift_date)} - ${fetchedShift.shift_type?.name || 'General'}`
+          }));
+
+          toast.success('Shift data loaded successfully');
         }
+      } catch (error) {
+        console.error("Error fetching shift data:", error);
+        toast.error("Failed to load shift data. Please fill manually.");
       }
     };
 
     fetchShiftData();
-  }, [shift_id]);
+  }, [shift_id, currentStaff?.tenant_id]);
 
   // Fetch initial data
   useEffect(() => {
-    fetchInitialData();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchInitialData();
+    }
+  }, [currentStaff?.tenant_id, clientData]); // Added clientData to avoid refetching if already set by shift
 
   useEffect(() => {
     if (searchTerm) {
@@ -155,6 +161,7 @@ function AddProgressNote() {
         const { data: clientsData, error: clientsError } = await supabase
           .from("clients")
           .select("id, first_name, last_name, ndis_number")
+          .eq("tenant_id", currentStaff.tenant_id)
           .eq("is_active", true)
           .order("first_name", { ascending: true });
 
@@ -167,6 +174,7 @@ function AddProgressNote() {
       const { data: hierarchiesData, error: hierarchiesError } = await supabase
         .from("hierarchy")
         .select("id, name, code")
+        .eq("tenant_id", currentStaff.tenant_id)
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .order("name", { ascending: true });
@@ -178,6 +186,7 @@ function AddProgressNote() {
       const { data: shiftTypesData, error: shiftTypesError } = await supabase
         .from("shift_types")
         .select("*")
+        .eq("tenant_id", currentStaff.tenant_id)
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
 
@@ -189,6 +198,7 @@ function AddProgressNote() {
         const { data: staffData, error: staffError } = await supabase
           .from("staff")
           .select("id, name, email, role")
+          .eq("tenant_id", currentStaff.tenant_id)
           .eq("is_active", true)
           .order("name", { ascending: true });
 
@@ -282,7 +292,8 @@ function AddProgressNote() {
           other_shift_type_specification: progressNoteData.other_shift_type_specification,
           shift_notes: progressNoteData.shift_notes,
           key_areas: [],
-          created_by: createdBy
+          created_by: createdBy,
+          tenant_id: currentStaff.tenant_id
         }])
         .select()
         .single();
@@ -294,7 +305,8 @@ function AddProgressNote() {
         await supabase
           .from('shifts')
           .update({ progress_note_id: progressNote.id })
-          .eq('id', shift_id);
+          .eq('id', shift_id)
+          .eq('tenant_id', currentStaff.tenant_id);
       }
 
       toast.success("Progress note saved successfully!");
@@ -361,7 +373,7 @@ function AddProgressNote() {
         </div>
       </div>
 
-      <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+      <div className="p-4 lg:p-6 max-w-4xl mx-auto">
         {/* Shift Info Banner */}
         {shiftData && (
           <div className="mb-6 bg-blue-600 border border-blue-700 rounded-[1.5rem] p-5 shadow-lg animate-in slide-in-from-top-4 duration-500">

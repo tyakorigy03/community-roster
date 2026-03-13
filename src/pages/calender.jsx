@@ -374,31 +374,14 @@ function PhotoCaptureModal({ isOpen, onClose, onCapture, isClockOut }) {
 
 // Clock In/Out Component
 function ClockInOutButton({ shift, staffId, onSuccess }) {
+  const { currentStaff } = useUser();
   const [loading, setLoading] = useState(false);
   const [currentStatus, setCurrentStatus] = useState(null);
   const [isPhotoModalOpen, setIsPhotoModalOpen] = useState(false);
-  const [requirePhotoProof, setRequirePhotoProof] = useState(false);
 
   useEffect(() => {
-    checkPhotoProofSetting();
     checkCurrentStatus();
   }, [shift]);
-
-  const checkPhotoProofSetting = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('settings')
-        .select('enabled')
-        .eq('key', 'photo-proof')
-        .single();
-
-      if (!error && data) {
-        setRequirePhotoProof(data.enabled || false);
-      }
-    } catch (e) {
-      console.error('Error checking photo proof setting:', e);
-    }
-  };
 
   const checkCurrentStatus = async () => {
     try {
@@ -407,6 +390,7 @@ function ClockInOutButton({ shift, staffId, onSuccess }) {
         .select('*')
         .eq('shift_id', shift.id)
         .eq('staff_id', staffId)
+        .eq('tenant_id', currentStaff?.tenant_id)
         .maybeSingle();
 
       if (error) throw error;
@@ -417,11 +401,7 @@ function ClockInOutButton({ shift, staffId, onSuccess }) {
   };
 
   const handleClockInOut = async () => {
-    if (requirePhotoProof) {
-      setIsPhotoModalOpen(true);
-    } else {
-      processClockInOut(null);
-    }
+    setIsPhotoModalOpen(true);
   };
 
   const processClockInOut = async (photoUrl, locationData = null) => {
@@ -440,7 +420,8 @@ function ClockInOutButton({ shift, staffId, onSuccess }) {
             clock_in_time: today,
             clock_in_photo_url: photoUrl,
             clock_in_location: finalLocation,
-            status: 'clocked_in'
+            status: 'clocked_in',
+            tenant_id: currentStaff?.tenant_id
           }]);
         if (error) throw error;
         toast.success('Sequence Activated');
@@ -454,7 +435,8 @@ function ClockInOutButton({ shift, staffId, onSuccess }) {
             status: 'completed',
             updated_at: today
           })
-          .eq('id', currentStatus.id);
+          .eq('id', currentStatus.id)
+          .eq('tenant_id', currentStaff?.tenant_id);
         if (error) throw error;
         toast.success('Sequence Terminated');
       }
@@ -469,8 +451,8 @@ function ClockInOutButton({ shift, staffId, onSuccess }) {
     }
   };
 
-  const isCompleted = !!currentStatus?.clock_out_time;
-  const isInProgress = !!currentStatus?.clock_in_time && !currentStatus?.clock_out_time;
+  const isCompleted = !!currentStatus?.clock_out_time || shift.status === 'completed' || shift.status === 'approved';
+  const isInProgress = !!currentStatus?.clock_in_time && !currentStatus?.clock_out_time && shift.status !== 'completed' && shift.status !== 'approved';
 
   if (isCompleted) {
     return (
@@ -596,9 +578,17 @@ function CalendarDay({ date, shifts, isToday, isSelected, onClick }) {
       onClick={onClick}
       className={`relative p-2 h-24 lg:h-28 flex flex-col border rounded-xl transition-all duration-500 group overflow-hidden ${isSelected
         ? 'border-blue-600 bg-blue-50/50 ring-4 ring-blue-600/5 shadow-lg shadow-blue-900/10'
-        : 'border-slate-100 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50'
+        : dayShifts.length > 0 
+          ? 'border-blue-100 bg-blue-50/20 hover:border-blue-300 hover:bg-blue-50/40 hover:shadow-xl hover:shadow-blue-200/50' 
+          : 'border-slate-100 bg-white hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50'
         }`}
     >
+      {dayShifts.length > 0 && (
+        <div className="absolute bottom-3 right-2 flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-[9px] font-black rounded-full shadow-lg z-30 border-2 border-white pointer-events-none">
+          {dayShifts.length}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-1 relative z-10 w-full">
         <span className={`text-[8px] font-black uppercase tracking-widest ${isToday ? 'text-blue-600' : 'text-slate-400'}`}>
           {date.toLocaleDateString('en-US', { weekday: 'short' })}
@@ -619,7 +609,8 @@ function CalendarDay({ date, shifts, isToday, isSelected, onClick }) {
         ) : (
           <div className="space-y-1">
             {dayShifts.slice(0, 2).map((shift, index) => {
-              const statusColor = getStatusColor(shift.status);
+              const status = getShiftStatus(shift);
+              const statusColor = getStatusColor(status);
               return (
                 <div key={index} className={`text-[8px] font-black px-1.5 py-0.5 rounded-md truncate border border-white/50 uppercase tracking-tight ${statusColor}`}>
                   {formatTime(shift.start_time)}
@@ -627,16 +618,16 @@ function CalendarDay({ date, shifts, isToday, isSelected, onClick }) {
               );
             })}
             {dayShifts.length > 2 && (
-              <div className="text-[7px] font-black text-slate-400 text-center uppercase tracking-widest bg-slate-50 py-0.5 rounded-md">
-                +{dayShifts.length - 2}
+              <div className="text-[7px] font-black text-slate-400 text-center uppercase tracking-widest bg-slate-50/50 py-0.5 rounded-md">
+                +{dayShifts.length - 2} More
               </div>
             )}
           </div>
         )}
       </div>
 
-      {dayShifts.length > 0 && !isSelected && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-400 opacity-30"></div>
+      {dayShifts.length > 0 && (
+        <div className={`absolute bottom-0 left-0 right-0 h-1 bg-blue-600 transition-all duration-500 ${isSelected ? 'opacity-100' : 'opacity-60'}`}></div>
       )}
     </button>
   );
@@ -695,6 +686,7 @@ export default function StaffCalendar() {
         .from('shifts')
         .select(`*, client:client_id(first_name, last_name), staff_shifts(*), shift_type:shift_type_id(name)`)
         .eq('staff_id', staffId)
+        .eq('tenant_id', currentStaff?.tenant_id)
         .gte('shift_date', formatDateToLocal(startOfMonth))
         .lte('shift_date', formatDateToLocal(endOfMonth));
 
@@ -995,7 +987,7 @@ export default function StaffCalendar() {
             }
             className="flex-1 h-10 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-blue-50 transition-all shadow-lg active:scale-95"
           >
-            <Download size={14} /> Export Logic
+            <Download size={14} /> Download PDF Schedule
           </button>
         </div>
       </div>
@@ -1008,9 +1000,9 @@ export default function StaffCalendar() {
           <div className="h-12 w-12 bg-white rounded-xl shadow-sm flex items-center justify-center mx-auto mb-4 text-slate-300">
             <CalendarIcon size={24} />
           </div>
-          <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1">Registry Silent</h3>
+          <h3 className="text-[9px] font-black text-slate-900 uppercase tracking-widest mb-1">No Shifts Found</h3>
           <p className="text-[8px] font-medium text-slate-400 uppercase tracking-widest leading-relaxed">
-            No operational sequences detected.
+            No scheduled assignments detected.
           </p>
         </div>
       ) : (
@@ -1022,7 +1014,7 @@ export default function StaffCalendar() {
 
     {filteredShifts.length > 0 && (
       <div className="bg-white rounded-xl p-4 border border-slate-100 shadow-sm flex justify-between items-center">
-        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Aggregate Payload</span>
+        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total Duration</span>
         <span className="text-base font-black text-blue-600 tracking-tight">
           {formatHours(
             filteredShifts.reduce((total, shift) => {

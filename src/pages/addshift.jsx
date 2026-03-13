@@ -1,6 +1,7 @@
 import { X, Search, User, Calendar, Clock, Users, ChevronDown, Check, CheckCircle2, Sparkles, Repeat,Loader2,Save, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useUser } from "../context/UserContext";
 
 // Helper functions
 const TODAY_ISO = (d = new Date()) =>
@@ -25,6 +26,7 @@ const formatHours = (hours) => {
 
 // Shift Form Modal Component (Add/Edit)
 export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, staffList = [] }) {
+  const { currentStaff } = useUser();
   const [formData, setFormData] = useState({
     client_id: '',
     staff_ids: [], // Changed to array for multi-staff support
@@ -118,6 +120,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
         .from("clients")
         .select("id, first_name, last_name, ndis_number")
         .eq("is_active", true)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("first_name", { ascending: true });
 
       if (clientsError) throw clientsError;
@@ -127,6 +130,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
         .from("shift_types")
         .select("*")
         .eq("is_active", true)
+        .eq("tenant_id", currentStaff.tenant_id)
         .order("sort_order", { ascending: true });
 
       if (shiftTypesError) throw shiftTypesError;

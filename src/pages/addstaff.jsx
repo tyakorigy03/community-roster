@@ -17,6 +17,7 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
+import { useUser } from "../context/UserContext";
 
 const documentFields = [
   "Certificate",
@@ -30,6 +31,7 @@ const documentFields = [
 ];
 
 function AddStaff() {
+  const { currentStaff } = useUser();
   const [staffData, setStaffData] = useState({
     name: "",
     dob: "",
@@ -57,8 +59,10 @@ function AddStaff() {
   const profileInputRef = useRef(null);
 
   useEffect(() => {
-    fetchPayRates();
-  }, []);
+    if (currentStaff?.tenant_id) {
+      fetchPayRates();
+    }
+  }, [currentStaff]);
 
   const fetchPayRates = async () => {
     try {
@@ -66,6 +70,7 @@ function AddStaff() {
       const { data, error } = await supabase
         .from('pay_rates')
         .select('*')
+        .eq('tenant_id', currentStaff.tenant_id)
         .order('name');
       if (error) throw error;
       setPayRates(data || []);
@@ -232,7 +237,8 @@ function AddStaff() {
           email: staffData.email,
           address: staffData.address,
           next_of_kin: staffData.nextOfKin,
-          profile_picture: profilePicUrl
+          profile_picture: profilePicUrl,
+          tenant_id: currentStaff.tenant_id
         }])
         .select()
         .single();
@@ -248,7 +254,8 @@ function AddStaff() {
             pay_rate_id: staffData.base_rate_id,
             effective_from: staffData.rate_effective_from || new Date().toISOString().split('T')[0],
             is_default: true,
-            priority: 1
+            priority: 1,
+            tenant_id: currentStaff.tenant_id
           }]);
         if (rateError) throw rateError;
       }
@@ -267,7 +274,8 @@ function AddStaff() {
               staff_id: staff.id,
               document_name: docName,
               file_url: url,
-              expiry_date: doc.expiry || null
+              expiry_date: doc.expiry || null,
+              tenant_id: currentStaff.tenant_id
             }]);
           if (docError) throw docError;
         }
