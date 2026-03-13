@@ -68,6 +68,7 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             PROVISIONING_PROFILE_SPECIFIER="BlessingCommunity_AppStore" \
             CODE_SIGN_IDENTITY="Apple Distribution"
+            DEVELOPMENT_TEAM=MJW2ZG6ZLH
 
       - name: Export IPA
         run: |
