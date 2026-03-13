@@ -30,6 +30,7 @@ jobs:
       - name: Install CocoaPods
         run: |
           cd ios/App
+          pod init
           pod install
 
       - name: Install Certificate
