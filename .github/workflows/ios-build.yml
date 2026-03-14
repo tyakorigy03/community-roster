@@ -1,0 +1,78 @@
+name: Build iOS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Install Capacitor iOS
+        run: |
+          npm install @capacitor/ios
+          npx cap add ios
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Setup iOS Certificates
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.CERTIFICATE_PASSWORD }}
+
+      - name: Install Provisioning Profile
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.PROVISIONING_PROFILE_BASE64 }}" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
+
+      - name: Generate Export Options Plist
+        run: |
+          cat <<EOF > ios/App/exportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>MJW2ZG6ZLH</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.blessingcommunity.app</key>
+              <string>BlessingCommunity_AppStore</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Build iOS App (IPA)
+        run: |
+          xcodebuild -workspace ios/App/App.xcworkspace -scheme App -archivePath App.xcarchive archive
+          xcodebuild -exportArchive -archivePath App.xcarchive -exportOptionsPlist ios/App/exportOptions.plist -exportPath output -allowProvisioningUpdates
+
+      - name: Upload to App Store Connect
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: output/App.ipa
+          issuer-id: ${{ secrets.P8_ISSUER_ID }}
+          key-id: ${{ secrets.P8_KEY_ID }}
+          key-content: ${{ secrets.P8_KEY }}

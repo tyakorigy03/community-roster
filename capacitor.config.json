@@ -1,0 +1,6 @@
+{
+  "appId": "com.blessingcommunity.app",
+  "appName": "Blessing Community",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
