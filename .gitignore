@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# Keys and secrets
+keys/
+*.p12
+*.p8
+*.mobileprovision
+*.jks
+*.keystore
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
