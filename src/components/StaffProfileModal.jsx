@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useState, useEffect } from "react";
 import { X, Mail, Phone, MapPin, Calendar, User, FileText, Download, Eye, AlertCircle, DollarSign, ShieldCheck, ChevronRight, Briefcase } from "lucide-react";
 import { supabase } from "../lib/supabase";
@@ -8,10 +9,7 @@ function StaffProfileModal({ staff, onClose }) {
   const [documents, setDocuments] = useState([]);
   const [payRates, setPayRates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [isScrolled, setIsScrolled] = useState(false);
   const contentRef = React.useRef(null);
-  const headerRef = React.useRef(null);
-  const footerRef = React.useRef(null);
   const [isMobile, setIsMobile] = useState(false);
   
   const documentFields = [
@@ -37,51 +35,6 @@ function StaffProfileModal({ staff, onClose }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Optimized scroll handler - ONLY on mobile, using CSS transforms
-  useEffect(() => {
-    if (!isMobile) return; // Skip on desktop
-    
-    let rafId = null;
-    let lastScrollTop = 0;
-
-    const handleScroll = () => {
-      if (rafId) return; // Skip if already scheduled
-      
-      rafId = requestAnimationFrame(() => {
-        if (!contentRef.current || !headerRef.current || !footerRef.current) {
-          rafId = null;
-          return;
-        }
-
-        const scrollTop = contentRef.current.scrollTop;
-        const scrollThreshold = 80;
-        
-        // Simple binary state - better performance
-        const shouldCollapse = scrollTop > scrollThreshold;
-        
-        if (shouldCollapse !== isScrolled) {
-          setIsScrolled(shouldCollapse);
-        }
-
-        // Use CSS custom properties for smooth GPU-accelerated animations
-        const progress = Math.min(scrollTop / scrollThreshold, 1);
-        headerRef.current.style.setProperty('--scroll-progress', progress);
-        footerRef.current.style.setProperty('--scroll-progress', progress);
-        
-        lastScrollTop = scrollTop;
-        rafId = null;
-      });
-    };
-
-    const element = contentRef.current;
-    if (element) {
-      element.addEventListener('scroll', handleScroll, { passive: true });
-      return () => {
-        element.removeEventListener('scroll', handleScroll);
-        if (rafId) cancelAnimationFrame(rafId);
-      };
-    }
-  }, [isMobile, isScrolled]);
 
   const fetchStaffDetails = async () => {
     try {
@@ -143,114 +96,48 @@ function StaffProfileModal({ staff, onClose }) {
     window.open(url, '_blank');
   };
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center z-[60] animate-in fade-in duration-300"
+      className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center z-[60]"
       onClick={onClose}
       style={{
         padding: 'env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)'
       }}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-[1.8rem] shadow-2xl w-full max-w-5xl h-[96vh] sm:h-auto sm:max-h-[95vh] overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-500 flex flex-col"
+        className="bg-white rounded-t-3xl sm:rounded-[1.8rem] shadow-2xl w-full max-w-5xl h-[96vh] sm:h-auto sm:max-h-[85vh] overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
 
-        {/* Tactical Header - Collapsing on Scroll (Mobile Only) */}
         <div 
-          ref={headerRef}
-          className={`bg-gradient-to-r from-slate-950 via-blue-950 to-slate-950 text-white relative flex-shrink-0 transition-all duration-300 ease-out ${
-            isMobile ? 'will-change-transform' : ''
-          }`}
-          style={{
-            padding: isMobile && isScrolled 
-              ? '0.5rem 1rem' 
-              : window.innerWidth < 640 
-                ? '1rem 1rem' 
-                : '0.75rem 1.5rem',
-            '--scroll-progress': 0
-          }}
+          className="bg-gradient-to-r from-slate-950 via-blue-950 to-slate-950 text-white relative flex-shrink-0 p-4 sm:p-6"
         >
-          {/* Drag Handle for Mobile - fades out on scroll */}
-          {isMobile && (
-            <div 
-              className="flex justify-center transition-opacity duration-300"
-              style={{
-                marginBottom: isScrolled ? '0' : '0.5rem',
-                opacity: isScrolled ? 0 : 1,
-                transform: `translateZ(0)` // Force GPU
-              }}
-            >
-              <div className="w-12 h-1 bg-white/20 rounded-full"></div>
-            </div>
-          )}
 
-          {/* Animated background blobs - fade on mobile scroll only */}
-          <div 
-            className={`absolute top-0 right-0 w-56 h-56 bg-blue-500/10 rounded-full -mr-28 -mt-28 blur-3xl transition-opacity duration-300 ${
-              isMobile ? '' : 'opacity-100'
-            }`}
-            style={{
-              opacity: isMobile && isScrolled ? 0 : 1,
-              transform: 'translateZ(0)'
-            }}
-          ></div>
-          <div 
-            className={`absolute bottom-0 left-0 w-44 h-44 bg-emerald-500/5 rounded-full -ml-24 -mb-24 blur-3xl transition-opacity duration-300 ${
-              isMobile ? '' : 'opacity-100'
-            }`}
-            style={{
-              opacity: isMobile && isScrolled ? 0 : 1,
-              transform: 'translateZ(0)'
-            }}
-          ></div>
 
           <div className="relative flex flex-row items-center gap-3 sm:gap-5">
             
-            {/* Profile Picture - Shrinks on mobile scroll only */}
             <div 
-              className={`relative group flex-shrink-0 transition-all duration-300 ease-out ${
-                isMobile ? 'will-change-transform' : ''
-              }`}
-              style={{
-                transform: isMobile && isScrolled 
-                  ? 'scale(0.75) translateZ(0)' 
-                  : 'scale(1) translateZ(0)'
-              }}
+              className="relative group flex-shrink-0"
             >
               {staff.profile_picture ? (
                 <img
                   src={staff.profile_picture}
                   alt={staff.name}
-                  className={`rounded-2xl object-cover border-4 border-white/10 shadow-2xl transition-all duration-300 ${
-                    isMobile && isScrolled ? 'w-12 h-12' : 'w-16 h-16 sm:w-20 sm:h-20'
-                  }`}
+                  className="rounded-2xl object-cover border-4 border-white/10 shadow-2xl w-16 h-16 sm:w-20 sm:h-20"
                 />
               ) : (
                 <div 
-                  className={`rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black shadow-2xl shadow-blue-900/40 transition-all duration-300 ${
-                    isMobile && isScrolled 
-                      ? 'w-12 h-12 text-sm' 
-                      : 'w-16 h-16 text-xl sm:w-20 sm:h-20 sm:text-2xl'
-                  }`}
+                  className="rounded-2xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black shadow-2xl shadow-blue-900/40 w-16 h-16 text-xl sm:w-20 sm:h-20 sm:text-2xl"
                 >
                   {staff.name.split(" ").map((n) => n[0]).join("").toUpperCase()}
                 </div>
               )}
 
               <div 
-                className={`absolute -bottom-1 -right-1 bg-emerald-500 rounded-xl flex items-center justify-center border-4 border-[#070b14] shadow-lg transition-all duration-300 ${
-                  isMobile && isScrolled ? 'w-5 h-5' : 'w-6 h-6 sm:w-7 sm:h-7'
-                }`}
-                style={{
-                  opacity: isMobile && isScrolled ? 0.5 : 1,
-                  transform: 'translateZ(0)'
-                }}
+                className="absolute -bottom-1 -right-1 bg-emerald-500 rounded-xl flex items-center justify-center border-4 border-[#070b14] shadow-lg w-6 h-6 sm:w-7 sm:h-7"
               >
                 <ShieldCheck 
-                  className={`text-white transition-all duration-300 ${
-                    isMobile && isScrolled ? 'w-2.5 h-2.5' : 'w-3 h-3'
-                  }`}
+                  className="text-white w-3 h-3"
                 />
               </div>
             </div>
@@ -259,18 +146,10 @@ function StaffProfileModal({ staff, onClose }) {
             <div className="flex-1 text-left min-w-0 w-full">
               {/* Badges - Fade out on mobile scroll */}
               <div 
-                className={`flex flex-wrap items-center justify-start gap-2 transition-all duration-300 overflow-hidden ${
-                  isMobile ? 'will-change-transform' : ''
-                }`}
-                style={{
-                  marginBottom: isMobile && isScrolled ? '0' : '0.5rem',
-                  maxHeight: isMobile && isScrolled ? '0' : '2rem',
-                  opacity: isMobile && isScrolled ? 0 : 1,
-                  transform: 'translateZ(0)'
-                }}
+                className="flex flex-wrap items-center justify-start gap-2 mb-2"
               >
                 <span className="px-2.5 py-1 bg-white/10 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-blue-300 border border-white/10 whitespace-nowrap">
-                  Personnel Record
+                  Staff Member
                 </span>
                 <span className="px-2.5 py-1 bg-emerald-500/20 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-emerald-400 border border-emerald-500/20 whitespace-nowrap">
                   Active Member
@@ -279,27 +158,14 @@ function StaffProfileModal({ staff, onClose }) {
 
               {/* Name - Shrinks on mobile scroll */}
               <h2 
-                className={`font-black tracking-tight text-white uppercase italic truncate transition-all duration-300 ${
-                  isMobile && isScrolled 
-                    ? 'text-base mb-0' 
-                    : 'text-xl sm:text-2xl lg:text-3xl mb-2'
-                }`}
-                style={{ transform: 'translateZ(0)' }}
+                className="font-black tracking-tight text-white uppercase italic truncate text-xl sm:text-2xl lg:text-3xl mb-1.5"
               >
                 {staff.name}
               </h2>
 
               {/* Details - Fade/collapse on mobile scroll */}
               <div 
-                className={`flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-slate-400 font-bold uppercase tracking-widest transition-all duration-300 overflow-hidden ${
-                  isMobile ? 'will-change-transform' : ''
-                }`}
-                style={{
-                  fontSize: isMobile && isScrolled ? '0' : window.innerWidth < 640 ? '0.5625rem' : '0.625rem',
-                  maxHeight: isMobile && isScrolled ? '0' : '3rem',
-                  opacity: isMobile && isScrolled ? 0 : 1,
-                  transform: 'translateZ(0)'
-                }}
+                className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 text-slate-400 font-bold uppercase tracking-widest text-[9px] sm:text-[10px]"
               >
                 <div className="flex items-center gap-1.5 truncate">
                   <Briefcase size={12} className="text-blue-400 flex-shrink-0" />
@@ -308,7 +174,7 @@ function StaffProfileModal({ staff, onClose }) {
 
                 <div className="flex items-center gap-1.5 truncate">
                   <Mail size={12} className="text-blue-400 flex-shrink-0" />
-                  <span className="truncate">{staff.email || "NO_EMAIL_LOCATED"}</span>
+                  <span className="truncate">{staff.email || "No email provided"}</span>
                 </div>
               </div>
             </div>
@@ -317,7 +183,6 @@ function StaffProfileModal({ staff, onClose }) {
             <button
               onClick={onClose}
               className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-slate-400 hover:text-white transition-all border border-white/5 flex-shrink-0"
-              style={{ transform: 'translateZ(0)' }}
             >
               <X size={18} />
             </button>
@@ -340,15 +205,15 @@ function StaffProfileModal({ staff, onClose }) {
                     <User size={14} className="text-white" />
                   </div>
                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">
-                    Biometric Data
+                    Personal Details
                   </h3>
                 </div>
 
                 <div className="space-y-2 sm:space-y-2.5">
                   {[
-                    { icon: Phone, label: "Comms Link", value: staff.phone || "UNREACHABLE" },
-                    { icon: Calendar, label: "Birth Record", value: formatDate(staff.dob) },
-                    { icon: MapPin, label: "Operational Base", value: staff.address || "TRANSIT_STATUS" }
+                    { icon: Phone, label: "Phone Number", value: staff.phone || "No phone listed" },
+                    { icon: Calendar, label: "Date of Birth", value: formatDate(staff.dob) },
+                    { icon: MapPin, label: "Home Address", value: staff.address || "Not provided" }
                   ].map((field, idx) => (
                     <div
                       key={idx}
@@ -387,10 +252,10 @@ function StaffProfileModal({ staff, onClose }) {
                     <div className="relative space-y-3">
                       <div>
                         <p className="text-[8px] font-black text-slate-500 uppercase tracking-[0.2em] mb-1">
-                          Designated Proxy
+                          Emergency Contact
                         </p>
                         <p className="text-sm sm:text-base font-black uppercase italic tracking-tight truncate">
-                          {staff.next_of_kin.name || "N/A"}
+                          {staff.next_of_kin.name || "None"}
                         </p>
                       </div>
 
@@ -430,7 +295,7 @@ function StaffProfileModal({ staff, onClose }) {
                       <DollarSign size={14} className="text-white" />
                     </div>
                     <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">
-                      Compensation Matrix
+                      Pay Rates
                     </h3>
                   </div>
 
@@ -446,7 +311,7 @@ function StaffProfileModal({ staff, onClose }) {
                       <div className="px-4 py-10 text-center">
                         <AlertCircle className="mx-auto text-slate-200 mb-2" size={28} />
                         <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                          No Compensation Data Located
+                          No pay rates assigned
                         </p>
                       </div>
                     ) : (
@@ -455,10 +320,10 @@ function StaffProfileModal({ staff, onClose }) {
                           <div className="flex items-start justify-between">
                             <div>
                               <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight">
-                                {rate.pay_rate?.name || "TACTICAL_RATE"}
+                                {rate.pay_rate?.name || "Standard Rate"}
                               </p>
                               <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
-                                {rate.pay_rate?.day_type || "GLOBAL"}
+                                {rate.pay_rate?.day_type || "Standard"}
                               </p>
                             </div>
                             {rate.is_default ? (
@@ -483,7 +348,7 @@ function StaffProfileModal({ staff, onClose }) {
                               <Calendar size={11} className="text-blue-400" />
                               {formatDate(rate.effective_from, true)}
                               <ChevronRight size={9} className="text-slate-300" />
-                              {rate.effective_to ? formatDate(rate.effective_to, true) : "NOW"}
+                              {rate.effective_to ? formatDate(rate.effective_to, true) : "Current"}
                             </div>
                           </div>
                         </div>
@@ -496,13 +361,13 @@ function StaffProfileModal({ staff, onClose }) {
                     <thead className="bg-slate-50/80 border-b border-slate-100">
                       <tr>
                         <th className="px-4 py-3 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                          Profile
+                          Rate Type
                         </th>
                         <th className="px-4 py-3 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                          Financials
+                          Hourly Rate
                         </th>
                         <th className="px-4 py-3 text-left text-[8px] font-black text-slate-400 uppercase tracking-widest">
-                          Era
+                          Period
                         </th>
                         <th className="px-4 py-3 text-right text-[8px] font-black text-slate-400 uppercase tracking-widest">
                           Status
@@ -516,7 +381,7 @@ function StaffProfileModal({ staff, onClose }) {
                           <td colSpan="4" className="px-4 py-10 text-center">
                             <AlertCircle className="mx-auto text-slate-200 mb-2" size={28} />
                             <p className="text-[9px] font-black text-slate-300 uppercase tracking-[0.2em]">
-                              No Compensation Data Located
+                              No pay rate records found
                             </p>
                           </td>
                         </tr>
@@ -525,10 +390,10 @@ function StaffProfileModal({ staff, onClose }) {
                           <tr key={idx} className="hover:bg-slate-50/50 transition-colors group">
                             <td className="px-4 py-3">
                               <p className="text-[10px] font-black text-slate-900 uppercase tracking-tight">
-                                {rate.pay_rate?.name || "TACTICAL_RATE"}
+                                {rate.pay_rate?.name || "Standard Rate"}
                               </p>
                               <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
-                                {rate.pay_rate?.day_type || "GLOBAL"}
+                                {rate.pay_rate?.day_type || "Standard"}
                               </p>
                             </td>
 
@@ -543,7 +408,7 @@ function StaffProfileModal({ staff, onClose }) {
                                 <Calendar size={11} className="text-blue-400" />
                                 {formatDate(rate.effective_from, true)}
                                 <ChevronRight size={9} className="text-slate-300" />
-                                {rate.effective_to ? formatDate(rate.effective_to, true) : "PRESENT"}
+                                {rate.effective_to ? formatDate(rate.effective_to, true) : "Current"}
                               </div>
                             </td>
 
@@ -573,7 +438,7 @@ function StaffProfileModal({ staff, onClose }) {
                     <FileText size={14} className="text-white" />
                   </div>
                   <h3 className="text-[10px] font-black text-slate-900 uppercase tracking-[0.2em]">
-                    Regulatory Compliance
+                    Staff Documents
                   </h3>
                 </div>
 
@@ -637,32 +502,20 @@ function StaffProfileModal({ staff, onClose }) {
           </div>
         </div>
 
-        {/* Tactical Footer - Hides on mobile scroll only */}
         <div 
-          ref={footerRef}
-          className={`border-t border-slate-100 bg-white flex justify-center sm:justify-end flex-shrink-0 transition-all duration-300 ease-out ${
-            isMobile ? 'will-change-transform' : ''
-          }`}
-          style={{
-            padding: isMobile && isScrolled 
-              ? '0.5rem 1rem' 
-              : window.innerWidth < 640 
-                ? `0.75rem 0.75rem max(0.75rem, env(safe-area-inset-bottom))` 
-                : `1rem 1rem max(1rem, env(safe-area-inset-bottom))`,
-            transform: isMobile && isScrolled ? 'translateY(100%) translateZ(0)' : 'translateY(0) translateZ(0)',
-            opacity: isMobile && isScrolled ? 0 : 1
-          }}
+          className="border-t border-slate-100 bg-white flex justify-center sm:justify-end flex-shrink-0 p-4 sm:p-5"
         >
           <button
             onClick={onClose}
             className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-slate-900 text-white text-[9px] font-black uppercase tracking-[0.28em] rounded-xl shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
           >
-            Acknowledge Record
+            Dismiss
             <ChevronRight size={13} />
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

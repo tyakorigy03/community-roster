@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useState } from "react";
 import { useUser } from "../context/UserContext";
 import { X, Send, Mail, ShieldCheck, AlertCircle, ChevronRight, Fingerprint } from "lucide-react";
@@ -32,7 +33,7 @@ function SendInviteModal({ staff, onClose }) {
         throw new Error(error || "Failed to send invite");
       }
 
-      toast.success(`Access credentials dispatched to ${staff.name}`);
+      toast.success(`Invitation sent to ${staff.name}`);
       onClose();
     } catch (error) {
       console.error("Invite error:", error);
@@ -42,7 +43,7 @@ function SendInviteModal({ staff, onClose }) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[70] animate-in fade-in duration-300">
       <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500 flex flex-col">
 
@@ -52,11 +53,11 @@ function SendInviteModal({ staff, onClose }) {
 
           <div className="relative flex items-center gap-4">
             <div className="h-12 w-12 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-900/40 border border-white/10">
-              <Fingerprint size={24} className="text-white" />
+              <Mail size={24} className="text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-black tracking-tight uppercase italic">Access Authorization</h2>
-              <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest mt-0.5">Strategic Portal Invitation</p>
+              <h2 className="text-lg font-black tracking-tight uppercase italic">Invite Staff</h2>
+              <p className="text-[10px] font-bold text-blue-300 uppercase tracking-widest mt-0.5">Send login access to staff member</p>
             </div>
           </div>
 
@@ -75,9 +76,9 @@ function SendInviteModal({ staff, onClose }) {
               <Mail size={18} />
             </div>
             <div className="min-w-0">
-              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Target Email Vector</p>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Staff Email Address</p>
               <p className="text-[13px] font-black text-slate-900 truncate uppercase tracking-tight">
-                {staff.email || "NO_EMAIL_DETECTED"}
+                {staff.email || "No email provided"}
               </p>
             </div>
           </div>
@@ -87,13 +88,13 @@ function SendInviteModal({ staff, onClose }) {
             <div className="relative">
               <div className="flex items-center gap-2 mb-4">
                 <ShieldCheck size={14} className="text-blue-400" />
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Security Protocol</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Invitation Details</h4>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Initialize primary account structure",
-                  "Dispatch encrypted reset credentials",
-                  "Activate portal access permissions"
+                  "Create staff account",
+                  "Send secure login instructions",
+                  "Grant system access"
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3">
                     <div className="h-4 w-4 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -110,7 +111,7 @@ function SendInviteModal({ staff, onClose }) {
             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-100 rounded-2xl">
               <AlertCircle size={18} className="text-rose-500 flex-shrink-0" />
               <p className="text-[10px] font-black text-rose-700 uppercase tracking-wide">
-                Warning: No communication vector found for {staff.name}. Authorization blocked.
+                Warning: No email found for {staff.name}. Cannot send invite.
               </p>
             </div>
           )}
@@ -123,7 +124,7 @@ function SendInviteModal({ staff, onClose }) {
             className="px-6 py-2.5 text-slate-400 hover:text-slate-600 text-[10px] font-black uppercase tracking-widest transition-all"
             disabled={loading}
           >
-            Abort Command
+            Cancel
           </button>
           <button
             onClick={handleSendInvite}
@@ -135,12 +136,13 @@ function SendInviteModal({ staff, onClose }) {
             ) : (
               <Send size={14} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
             )}
-            {loading ? "Transmitting..." : "Dispatch Invite"}
+            {loading ? "Sending..." : "Send Invite"}
             {!loading && <ChevronRight size={14} />}
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

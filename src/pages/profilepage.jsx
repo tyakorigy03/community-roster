@@ -477,7 +477,7 @@ if (loading) {
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
-        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING PROFILE DATA...</div>
+        <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING PROFILE...</div>
       </div>
     </div>
   );
@@ -498,11 +498,11 @@ if (loading) {
 
     <div className="min-w-0">
       <h2 className="text-sm lg:text-lg font-black text-slate-900 uppercase tracking-tight truncate">
-        Operational Identity
+        My Profile
       </h2>
 
       <p className="text-[9px] lg:text-[11px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1 truncate flex items-center gap-2">
-        Authorized → Personnel Profile
+        Authorized → My Account Details
 
         {staffData.role && (
           <span className="bg-blue-100 text-blue-600 text-[9px] lg:text-[10px] px-2 py-0.5 rounded-full border border-blue-200 font-black uppercase tracking-widest flex-shrink-0 truncate max-w-[120px]">
@@ -524,7 +524,7 @@ if (loading) {
         className="px-3 py-2 bg-blue-600 text-white text-[9px] lg:text-[11px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all flex items-center gap-2"
       >
         <Edit2 size={13} />
-        <span className="hidden sm:inline">Modify Profile</span>
+        <span className="hidden sm:inline">Edit Profile</span>
       </button>
     </div>
   )}
@@ -581,17 +581,17 @@ if (loading) {
               </div>
               <div className="flex gap-3">
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Security Clearance</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Account Type</p>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Level 1 - Admin</span>
+                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Administrator</span>
                   </div>
                 </div>
                 <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Profile Status</p>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Status</p>
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Active Duty</span>
+                    <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Active</span>
                   </div>
                 </div>
               </div>
@@ -599,13 +599,13 @@ if (loading) {
           </div>
         </div>
 
-        {/* Tactical Overview Stats */}
+        {/* Account Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           {[
-            { label: 'Document Integrity', val: `${docStats.uploaded}/${docStats.total}`, sub: 'Resource Compliance', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
-            { label: 'Safety Violations', val: docStats.expired, sub: 'Expired Certificates', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
-            { label: 'Operational Age', val: '2Y 4M', sub: 'Tenure on Duty', icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-            { label: 'Access Protocol', val: 'ENCRYPTED', sub: 'Data Sensitivity', icon: Lock, color: 'text-indigo-600', bg: 'bg-indigo-50' }
+            { label: 'Document Status', val: `${docStats.uploaded}/${docStats.total}`, sub: 'Uploaded Documents', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Compliance', val: docStats.expired, sub: 'Expired Documents', icon: AlertCircle, color: 'text-rose-600', bg: 'bg-rose-50' },
+            { label: 'Joined Since', val: '2Y 4M', sub: 'Time Joined', icon: Calendar, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Security', val: 'ENCRYPTED', sub: 'Data Privacy', icon: Lock, color: 'text-indigo-600', bg: 'bg-indigo-50' }
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-[1.5rem] border border-slate-100 p-4 shadow-sm hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between mb-3">
@@ -628,13 +628,13 @@ if (loading) {
         <div className="bg-white rounded-[2.5rem] border border-slate-100 overflow-hidden shadow-sm shadow-slate-200/50">
           <div className="px-6 pt-6 flex items-center gap-1 bg-slate-50/50 border-b border-slate-100 p-1">
             {[
-              { id: 'personal', label: 'Identity Protocol', icon: User },
-              { id: 'documents', label: 'Verification Ledger', icon: FileSearch }
+              { id: 'personal', label: 'Personal Info', icon: User },
+              { id: 'documents', label: 'Documents', icon: FileSearch }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 h-10 rounded-t-2xl text-[10px] font-black uppercase tracking-[0.15em] transition-all relative ${activeTab === tab.id
+                className={`flex items-center gap-2 px-5 h-10 rounded-t-2xl text-[10px] font-bold uppercase tracking-widest transition-all relative ${activeTab === tab.id
                   ? 'bg-white text-blue-600 border-x border-t border-slate-100 -mb-[1px] shadow-[0_-4px_10px_-4px_rgba(0,0,0,0.05)]'
                   : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
                   }`}
@@ -651,9 +651,9 @@ if (loading) {
               <div className="space-y-8">
                 {isEditing && (
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <Camera size={12} className="text-blue-500" />
-                      Profile Visualization
+                      Profile Picture
                     </label>
                     <div
                       className={`border-2 border-dashed rounded-[2rem] p-8 transition-all flex flex-col items-center justify-center text-center group bg-slate-50/50 ${isDragging
@@ -671,11 +671,11 @@ if (loading) {
                             <ImageIcon size={20} />
                           </div>
                           <div className="text-left">
-                            <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight line-clamp-1 max-w-[200px]">
+                            <p className="text-[11px] font-bold text-slate-900 uppercase tracking-tight line-clamp-1 max-w-[200px]">
                               {staffData.profilePictureFile.name}
                             </p>
                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                              Ready for Synchronization
+                              Ready to Save
                             </p>
                           </div>
                           <button
@@ -691,8 +691,8 @@ if (loading) {
                           <div className="h-14 w-14 bg-white rounded-2xl flex items-center justify-center text-slate-300 mb-4 border border-slate-100 shadow-sm group-hover:scale-110 group-hover:text-blue-500 transition-all duration-500">
                             <Upload size={24} />
                           </div>
-                          <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-1">Environmental Upload</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Drag imagery here or interact to browse</p>
+                          <p className="text-[11px] font-black text-slate-900 uppercase tracking-tight mb-1">Upload Photo</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Drag photo here or click to browse</p>
                           <input
                             ref={profileInputRef}
                             type="file"
@@ -710,9 +710,9 @@ if (loading) {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <User size={12} className="text-blue-500" />
-                      Legal Designation
+                      Full Name
                     </label>
                     {isEditing ? (
                       <input
@@ -720,34 +720,34 @@ if (loading) {
                         name="name"
                         value={staffData.name}
                         onChange={handleInputChange}
-                        placeholder="Authorized Name"
+                        placeholder="Full Name"
                         className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[11px] font-bold focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none"
                         required
                       />
                     ) : (
                       <div className="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
                         <User className="text-blue-600" size={16} />
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.name}</span>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.name}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <Mail size={12} className="text-indigo-500" />
-                      Communication Node (Auth)
+                      Email Address
                     </label>
                     <div className="flex items-center gap-3 h-12 px-4 bg-slate-100 border border-slate-200 rounded-2xl opacity-60">
                       <Mail className="text-indigo-600" size={16} />
-                      <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.email}</span>
+                      <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.email}</span>
                       <Lock size={12} className="ml-auto text-slate-400" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <Phone size={12} className="text-emerald-500" />
-                      Tactical Interconnect
+                      Phone Number
                     </label>
                     {isEditing ? (
                       <input
@@ -762,15 +762,15 @@ if (loading) {
                     ) : (
                       <div className="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
                         <Phone className="text-emerald-600" size={16} />
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.phone || "UNLINKED"}</span>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.phone || "UNLINKED"}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <Calendar size={12} className="text-rose-500" />
-                      Temporal Origin (DOB)
+                      Date of Birth
                     </label>
                     {isEditing ? (
                       <input
@@ -784,15 +784,15 @@ if (loading) {
                     ) : (
                       <div className="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
                         <Calendar className="text-rose-600" size={16} />
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{formatDate(staffData.dob)}</span>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{formatDate(staffData.dob)}</span>
                       </div>
                     )}
                   </div>
 
                   <div className="md:col-span-2 space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
                       <MapPin size={12} className="text-amber-500" />
-                      Geographic Base Station
+                      Home Address
                     </label>
                     {isEditing ? (
                       <input
@@ -800,14 +800,14 @@ if (loading) {
                         name="address"
                         value={staffData.address}
                         onChange={handleInputChange}
-                        placeholder="Full operational address..."
+                        placeholder="Full home address..."
                         className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[11px] font-bold focus:bg-white focus:ring-4 focus:ring-blue-500/5 transition-all outline-none"
                         required
                       />
                     ) : (
                       <div className="flex items-center gap-3 h-12 px-4 bg-slate-50 border border-slate-100 rounded-2xl shadow-sm">
                         <MapPin className="text-amber-600" size={16} />
-                        <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.address || "NO BASE DEFINED"}</span>
+                        <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.address || "NOT PROVIDED"}</span>
                       </div>
                     )}
                   </div>
@@ -818,12 +818,12 @@ if (loading) {
                     <div className="h-8 w-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
                       <Users size={16} />
                     </div>
-                    <h3 className="text-[12px] font-black text-slate-900 uppercase tracking-widest">Next of Kin Protocol</h3>
+                    <h3 className="text-[12px] font-bold text-slate-900 uppercase tracking-widest">Emergency Contact</h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        NOK Legal Name
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        Contact Name
                       </label>
                       {isEditing ? (
                         <input
@@ -831,20 +831,20 @@ if (loading) {
                           name="name"
                           value={staffData.next_of_kin?.name || ""}
                           onChange={handleNextOfKinChange}
-                          placeholder="Personnel Name"
+                          placeholder="Full Name"
                           className="w-full h-11 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[11px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
                           required
                         />
                       ) : (
                         <div className="h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center">
-                          <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.name || "N/A"}</span>
+                          <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.name || "N/A"}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        NOK Interconnect
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        Contact Phone
                       </label>
                       {isEditing ? (
                         <input
@@ -852,20 +852,20 @@ if (loading) {
                           name="phone"
                           value={staffData.next_of_kin?.phone || ""}
                           onChange={handleNextOfKinChange}
-                          placeholder="Interconnect Node"
+                          placeholder="Phone Number"
                           className="w-full h-11 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[11px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
                           required
                         />
                       ) : (
                         <div className="h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center">
-                          <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.phone || "N/A"}</span>
+                          <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.phone || "N/A"}</span>
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                        Kinship Matrix
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                        Relationship
                       </label>
                       {isEditing ? (
                         <input
@@ -873,12 +873,12 @@ if (loading) {
                           name="relationship"
                           value={staffData.next_of_kin?.relationship || ""}
                           onChange={handleNextOfKinChange}
-                          placeholder="Relationship Vector"
+                          placeholder="Relationship"
                           className="w-full h-11 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-[11px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
                         />
                       ) : (
                         <div className="h-11 px-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-center">
-                          <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.relationship || "N/A"}</span>
+                          <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{staffData.next_of_kin?.relationship || "N/A"}</span>
                         </div>
                       )}
                     </div>
@@ -888,143 +888,238 @@ if (loading) {
             )}
 
             {activeTab === 'documents' && (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-100">
-                  <thead className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-[0.15em]">
-                    <tr>
-                      <th className="px-6 py-4 text-left">Operational Document</th>
-                      <th className="px-6 py-4 text-left">Compliance Status</th>
-                      <th className="px-6 py-4 text-left">Tactical Expiry</th>
-                      <th className="px-6 py-4 text-right">Registry Operations</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-slate-50">
-                    {documentFields.map((docName) => {
-                      const doc = staffData.documents[docName];
-                      const hasFile = doc.file || doc.existing_url;
-                      const expired = doc.existing_url && isDocumentExpired(doc.expiry);
+              <div className="space-y-4">
+                {/* Mobile View: High-Density Cards */}
+                <div className="lg:hidden space-y-3">
+                  {documentFields.map((docName) => {
+                    const doc = staffData.documents[docName];
+                    const hasFile = doc.file || doc.existing_url;
+                    const expired = doc.existing_url && isDocumentExpired(doc.expiry);
 
-                      return (
-                        <tr key={docName} className="group hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center gap-3">
-                              <div className={`h-9 w-9 rounded-xl flex items-center justify-center border shadow-sm transition-transform group-hover:scale-110 ${hasFile ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>
-                                <FileText size={16} />
-                              </div>
-                              <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">{docName}</span>
+                    return (
+                      <div key={docName} className="bg-slate-50 border border-slate-100 rounded-2xl p-4 transition-all">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex gap-3">
+                            <div className={`h-10 w-10 rounded-xl flex items-center justify-center border ${hasFile ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>
+                              <FileText size={18} />
                             </div>
-                          </td>
-
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {hasFile ? (
-                              <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm ${expired
-                                ? 'bg-rose-500 text-white shadow-rose-500/20'
-                                : 'bg-emerald-500 text-white shadow-emerald-500/20'
-                                }`}>
-                                {expired ? (
-                                  <>
-                                    <AlertCircle size={10} />
-                                    Expired / Critical
-                                  </>
+                            <div>
+                              <h4 className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{docName}</h4>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                {hasFile ? (
+                                  <span className={`text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-md ${expired ? 'bg-rose-50 text-rose-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                                    {expired ? 'Expired' : 'Verified'}
+                                  </span>
                                 ) : (
-                                  <>
-                                    <CheckCircle2 size={10} />
-                                    Valid / Active
-                                  </>
+                                  <span className="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md uppercase tracking-widest">
+                                    Missing
+                                  </span>
                                 )}
                               </div>
-                            ) : (
-                              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500 text-white text-[9px] font-black uppercase tracking-widest shadow-sm shadow-amber-500/20">
-                                <AlertCircle size={10} />
-                                Missing Entry
-                              </div>
-                            )}
-                          </td>
+                            </div>
+                          </div>
 
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {isEditing ? (
-                              <input
-                                type="date"
-                                value={doc.expiry}
-                                onChange={(e) => handleDocumentExpiryChange(docName, e.target.value)}
-                                className="h-9 bg-slate-50 border border-slate-100 rounded-xl px-3 text-[10px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none w-full max-w-[140px]"
-                              />
-                            ) : (
-                              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase">
-                                <Calendar size={12} className={expired ? "text-rose-500" : "text-slate-400"} />
-                                {doc.expiry ? formatDate(doc.expiry) : "NO DATA"}
-                              </div>
+                          <div className="flex gap-1.5">
+                            {hasFile && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => handleViewDocument(doc.existing_url)}
+                                  className="h-8 w-8 flex items-center justify-center text-blue-600 bg-white border border-slate-100 shadow-sm rounded-lg"
+                                >
+                                  <Eye size={14} />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadDocument(doc.existing_url, `${docName}_${staffData.name}`)}
+                                  className="h-8 w-8 flex items-center justify-center text-emerald-600 bg-white border border-slate-100 shadow-sm rounded-lg"
+                                >
+                                  <Download size={14} />
+                                </button>
+                              </>
                             )}
-                          </td>
+                            {isEditing && (
+                              hasFile ? (
+                                <button
+                                  type="button"
+                                  onClick={() => removeDocument(docName)}
+                                  className="h-8 w-8 flex items-center justify-center text-rose-500 bg-white border border-slate-100 shadow-sm rounded-lg"
+                                >
+                                  <X size={14} />
+                                </button>
+                              ) : (
+                                <div className="relative">
+                                  <input
+                                    ref={el => fileInputRefs.current[docName] = el}
+                                    type="file"
+                                    accept="image/*,application/pdf,.doc,.docx"
+                                    onChange={(e) =>
+                                      e.target.files && handleDocumentChange(docName, e.target.files[0])
+                                    }
+                                    className="hidden"
+                                    id={`mob-doc-${docName}`}
+                                  />
+                                  <label
+                                    htmlFor={`mob-doc-${docName}`}
+                                    className="h-8 w-8 flex items-center justify-center bg-blue-600 text-white rounded-lg shadow-blue-100 shadow-lg cursor-pointer"
+                                  >
+                                    <Upload size={14} />
+                                  </label>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
 
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-1">
-                              {hasFile && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleViewDocument(doc.existing_url)}
-                                    className="h-8 w-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                                    title="Visualize"
-                                  >
-                                    <Eye size={14} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleDownloadDocument(doc.existing_url, `${docName}_${staffData.name}`)}
-                                    className="h-8 w-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
-                                    title="Export"
-                                  >
-                                    <Download size={14} />
-                                  </button>
-                                </>
+                        <div className="pt-3 border-t border-slate-100/60 flex items-center justify-between">
+                          <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            <Calendar size={12} className="text-slate-400" />
+                            {doc.expiry ? formatDate(doc.expiry) : "No Expiry Set"}
+                          </div>
+                          {isEditing && (
+                            <input
+                              type="date"
+                              value={doc.expiry}
+                              onChange={(e) => handleDocumentExpiryChange(docName, e.target.value)}
+                              className="h-8 bg-white border border-slate-100 rounded-lg px-2 text-[10px] font-bold outline-none"
+                            />
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop View: Refined Table */}
+                <div className="hidden lg:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-slate-100">
+                    <thead className="bg-slate-50/50 text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+                      <tr>
+                        <th className="px-6 py-4 text-left">Document Name</th>
+                        <th className="px-6 py-4 text-left">Status</th>
+                        <th className="px-6 py-4 text-left">Expiry Date</th>
+                        <th className="px-6 py-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-slate-50">
+                      {documentFields.map((docName) => {
+                        const doc = staffData.documents[docName];
+                        const hasFile = doc.file || doc.existing_url;
+                        const expired = doc.existing_url && isDocumentExpired(doc.expiry);
+
+                        return (
+                          <tr key={docName} className="group hover:bg-slate-50/50 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-9 w-9 rounded-xl flex items-center justify-center border transition-all group-hover:scale-105 ${hasFile ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-300 border-slate-100'}`}>
+                                  <FileText size={16} />
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-900 uppercase tracking-tight">{docName}</span>
+                              </div>
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {hasFile ? (
+                                <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-widest ${expired
+                                  ? 'bg-rose-50 text-rose-600'
+                                  : 'bg-emerald-50 text-emerald-600'
+                                  }`}>
+                                  {expired ? <AlertCircle size={10} /> : <CheckCircle2 size={10} />}
+                                  {expired ? 'Expired' : 'Verified'}
+                                </div>
+                              ) : (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-600 text-[9px] font-bold uppercase tracking-widest">
+                                  <AlertCircle size={10} />
+                                  Missing
+                                </div>
                               )}
+                            </td>
 
-                              {isEditing && (
-                                <>
-                                  {hasFile ? (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {isEditing ? (
+                                <input
+                                  type="date"
+                                  value={doc.expiry}
+                                  onChange={(e) => handleDocumentExpiryChange(docName, e.target.value)}
+                                  className="h-9 bg-slate-50 border border-slate-100 rounded-xl px-3 text-[10px] font-bold focus:bg-white focus:ring-2 focus:ring-blue-500/10 transition-all outline-none w-full max-w-[140px]"
+                                />
+                              ) : (
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-600 uppercase">
+                                  <Calendar size={12} className={expired ? "text-rose-500" : "text-slate-400"} />
+                                  {doc.expiry ? formatDate(doc.expiry) : "NOT PROVIDED"}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="px-6 py-4 whitespace-nowrap text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                {hasFile && (
+                                  <>
                                     <button
                                       type="button"
-                                      onClick={() => removeDocument(docName)}
-                                      className="h-8 w-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
-                                      title="Purge"
+                                      onClick={() => handleViewDocument(doc.existing_url)}
+                                      className="h-8 w-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                      title="View"
                                     >
-                                      <X size={14} />
+                                      <Eye size={14} />
                                     </button>
-                                  ) : (
-                                    <div className="relative">
-                                      <input
-                                        ref={el => fileInputRefs.current[docName] = el}
-                                        type="file"
-                                        accept="image/*,application/pdf,.doc,.docx"
-                                        onChange={(e) =>
-                                          e.target.files && handleDocumentChange(docName, e.target.files[0])
-                                        }
-                                        className="hidden"
-                                        id={`doc-${docName}`}
-                                      />
-                                      <label
-                                        htmlFor={`doc-${docName}`}
-                                        className="h-8 w-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
-                                        title="Initialize"
-                                      >
-                                        <Upload size={14} />
-                                      </label>
-                                    </div>
-                                  )}
-                                </>
-                              )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDownloadDocument(doc.existing_url, `${docName}_${staffData.name}`)}
+                                      className="h-8 w-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all"
+                                      title="Download"
+                                    >
+                                      <Download size={14} />
+                                    </button>
+                                  </>
+                                )}
 
-                              {!hasFile && !isEditing && (
-                                <span className="text-[10px] font-black text-slate-300 opacity-50 px-3">PROTECTED</span>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                {isEditing && (
+                                  <>
+                                    {hasFile ? (
+                                      <button
+                                        type="button"
+                                        onClick={() => removeDocument(docName)}
+                                        className="h-8 w-8 flex items-center justify-center text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                        title="Delete"
+                                      >
+                                        <X size={14} />
+                                      </button>
+                                    ) : (
+                                      <div className="relative">
+                                        <input
+                                          ref={el => fileInputRefs.current[docName] = el}
+                                          type="file"
+                                          accept="image/*,application/pdf,.doc,.docx"
+                                          onChange={(e) =>
+                                            e.target.files && handleDocumentChange(docName, e.target.files[0])
+                                          }
+                                          className="hidden"
+                                          id={`doc-${docName}`}
+                                        />
+                                        <label
+                                          htmlFor={`doc-${docName}`}
+                                          className="h-8 w-8 flex items-center justify-center bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-all cursor-pointer"
+                                          title="Upload"
+                                        >
+                                          <Upload size={14} />
+                                        </label>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+
+                                {!hasFile && !isEditing && (
+                                  <span className="text-[10px] font-bold text-slate-300 opacity-50 px-3 uppercase">NOT UPLOADED</span>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
 
@@ -1034,22 +1129,22 @@ if (loading) {
                 <button
                   type="button"
                   onClick={handleCancelEdit}
-                  className="flex-1 h-12 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 transition-colors"
+                  className="flex-1 h-12 text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-colors"
                   disabled={isSubmitting}
                 >
-                  Cancel modulation
+                  Discard Changes
                 </button>
 
                 <button
                   type="submit"
-                  className="flex-[2] h-12 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-[2] h-12 bg-slate-900 text-white rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-slate-900/20 hover:bg-slate-800 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/20 border-t-white"></div>
                   ) : (
                     <>
-                      Commit Synchronization
+                      Save Changes
                       <ArrowUpRight size={14} />
                     </>
                   )}

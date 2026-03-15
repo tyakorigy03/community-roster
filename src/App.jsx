@@ -11,7 +11,6 @@ import AddStaff from "./pages/addstaff";
 import Shifts from "./pages/shifts";
 import ShiftHistory from "./pages/ShiftHistory";
 import AddShift from "./pages/addshift";
-import WeeklyRoster from "./pages/shifts";
 import AddClient from "./pages/addclient";
 import ClientsPage from "./pages/clients";
 import EditClient from "./pages/editclient";

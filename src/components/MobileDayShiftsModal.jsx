@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React from 'react';
 import { X, CalendarIcon, Clock, Filter } from 'lucide-react';
 
@@ -45,7 +46,7 @@ function MobileDayShiftsModal({
     return total + (end - start - breakHours);
   }, 0);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-[100] lg:hidden animate-in fade-in duration-300">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col border border-white/20 animate-in zoom-in-95 duration-300 max-h-[90vh]">
         {/* Header */}
@@ -147,7 +148,8 @@ function MobileDayShiftsModal({
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -6,10 +6,7 @@ import {
   Calendar,
   Users,
   FileText,
-  AlertCircle,
-  DollarSign,
   Settings,
-  Menu,
   LogOut,
   User,
   ChevronDown,
@@ -127,7 +124,7 @@ function Layout({ children }) {
   return (
     <div className="flex flex-col h-screen bg-blue-600 overflow-hidden font-sans">
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-3 lg:px-5 py-2 pt-5 md:pt-1  text-white z-50 w-full">
+      <nav className="flex justify-between items-center px-3 lg:px-5 pr-5 md:pr-2 py-2 text-white z-50 w-full">
         <div className="flex items-center gap-3 min-w-0">
           <a className="flex items-center gap-2 group flex-shrink-0" href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
             <div className="bg-white p-1 rounded-lg group-hover:bg-white/90 transition-all flex-shrink-0 shadow-md ring-1 ring-white/20">
@@ -138,7 +135,6 @@ function Layout({ children }) {
               <p className="text-[9px] font-bold opacity-60 uppercase tracking-widest mt-0.5 truncate max-w-[140px]">Community Roster</p>
             </div>
           </a>
-
           {/* Desktop Navigation List */}
           <ul className="flex items-center gap-0.5 min-w-0">
             {navItems.map((item) => {
@@ -224,13 +220,13 @@ function Layout({ children }) {
 
       {/* Main Content Area */}
       <main className="flex-1 bg-white rounded-t-2xl lg:rounded-t-[2rem] overflow-auto shadow-[0_-10px_40px_rgba(0,0,0,0.1)] relative no-scrollbar">
-        <div className="h-full layout-main">
+        <div className="h-full">
           {children}
         </div>
       </main>
 
       {/* Bottom Navigation - Hidden on md+ unless needed */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 shadow-[0_-2px_16px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out z-40 translate-y-0 md:hidden" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
+      <div className="bg-white  border-t border-slate-100 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]     md:hidden" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
         <div className="flex justify-around items-center px-1 pt-1 pb-1">
           {mobilePrimaryNav.map((item) => {
             const isActive = activeNavItem === item.path;

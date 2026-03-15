@@ -106,73 +106,7 @@ const getShiftColor = (index) => {
   return SHIFT_COLORS[index % SHIFT_COLORS.length];
 };
 
-// Mobile Shift Card Component
-function MobileShiftCard({ shift, index, onEdit, totalShifts }) {
-  const duration = () => {
-    const start = parseTime(shift.start_time);
-    let end = parseTime(shift.end_time);
-    if (end < start) end += 24;
-    const breakHours = (shift.break_minutes || 0) / 60;
-    const hours = end - start - breakHours;
-    return hours > 0 ? formatHours(hours) : '0h';
-  };
 
-  return (
-    <div
-      className="relative mb-1.5"
-      onClick={() => onEdit(shift)}
-    >
-      <div
-        className="p-2.5 bg-white rounded-lg border-l-4 shadow-sm hover:shadow transition-all cursor-pointer"
-        style={{ borderLeftColor: shift.color || getShiftColor(index) }}
-      >
-        <div className="flex justify-between items-start mb-1">
-          <div className="font-bold text-xs text-gray-800 truncate flex-1 mr-2">
-            {shift.client_name || shift.shift_type_name || 'Shift'}
-          </div>
-          {totalShifts > 1 && (
-            <div className="text-[10px] font-bold px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">
-              {index + 1}/{totalShifts}
-            </div>
-          )}
-        </div>
-
-        {shift.hasConflict && (
-          <div className="mb-1.5 flex items-center gap-1 text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded border border-red-100">
-            <AlertCircle size={10} /> Conflict
-          </div>
-        )}
-
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-[11px] text-gray-500 truncate">
-            {shift.shift_type_name || 'No type'}
-          </div>
-          {shift.status === 'scheduled' && (
-            <span className="text-[9px] font-bold px-1 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded">
-              DRAFT
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 mb-1.5">
-          <div className="text-xs text-gray-600 font-medium flex items-center">
-            <Clock size={11} className="mr-1" />
-            {shift.start_time}-{shift.end_time}
-          </div>
-        </div>
-
-        <div className="flex justify-between items-end">
-          <div className="text-[11px] font-bold text-blue-600">{duration()}</div>
-          {shift.staff_name && (
-            <div className="text-[10px] text-gray-400 italic truncate max-w-[100px]">
-              {shift.staff_name}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Single Shift Card Component (Desktop)
 function ShiftCard({ shift, index, onEdit, totalShifts }) {
@@ -1073,422 +1007,422 @@ export default function WeeklyRoster() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
-          <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING SHIFTS DATA...</div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full  flex flex-col bg-gray-50 overflow-hidden font-sans">
-      {/* --- UNIFIED COMPACT HEADER --- */}
-      <header className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
-        <div className="max-w-[1600px] mx-auto px-3 py-2 flex  gap-2 flex-row items-center justify-between">
+    <>
+      <div className="h-full  flex flex-col bg-gray-50 overflow-hidden font-sans">
+        {/* --- UNIFIED COMPACT HEADER --- */}
+        <header className="flex-shrink-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+          <div className="max-w-[1600px] mx-auto px-3 py-2 flex  gap-2 flex-row items-center justify-between">
 
-          {/* LEFT SIDE */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 lg:gap-6  w-auto">
+            {/* LEFT SIDE */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:gap-3 lg:gap-6  w-auto">
 
-            {/* Logo + Title */}
-            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
-                <Calendar size={16} />
-              </div>
-              <div>
-                <h1 className="text-sm hidden md:block sm:text-base font-black text-gray-900 leading-tight tracking-tight uppercase">
-                  <span>Blessing community</span>   <span className="text-blue-600">Roster</span>
-                </h1>
-                <div className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.15em] leading-none">
-                  Console
+              {/* Logo + Title */}
+              <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-sm">
+                  <Calendar size={16} />
                 </div>
-              </div>
-            </div>
-
-            {/* Week Navigation */}
-            <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-lg border border-gray-200/50 w-full sm:w-auto mt-2 sm:mt-0">
-              <button
-                onClick={() => changeWeek(-1)}
-                className="w-7 h-7 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95"
-              >
-                <ChevronLeft size={14} />
-              </button>
-
-              <div className="px-1 py-0.5 flex flex-col items-center min-w-[110px]">
-                <div className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
-                  Current Week
-                </div>
-                <div className="text-[10px] sm:text-xs font-bold text-gray-700 text-center">
-                  {formatDateRange(weekDates[0], weekDates[6])}
+                <div>
+                  <h1 className="text-sm hidden md:block sm:text-base font-black text-gray-900 leading-tight tracking-tight uppercase">
+                    <span>Blessing community</span>   <span className="text-blue-600">Roster</span>
+                  </h1>
+                  <div className="text-[8px] text-gray-400 font-bold uppercase tracking-[0.15em] leading-none">
+                    Console
+                  </div>
                 </div>
               </div>
 
-              <button
-                onClick={() => changeWeek(1)}
-                className="w-7 h-7 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-
-            {/* Today Button */}
-            <button
-              onClick={handleGoToToday}
-              className="px-2 py-1 text-[9px] font-black text-gray-500 hover:text-blue-600 transition-all uppercase tracking-widest hidden sm:block"
-            >
-              Today
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 mt-2 sm:mt-0">
-
-            {/* View Toggle */}
-            <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
-              {["staff", "client"].map((type) => (
+              {/* Week Navigation */}
+              <div className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-lg border border-gray-200/50 w-full sm:w-auto mt-2 sm:mt-0">
                 <button
-                  key={type}
-                  onClick={() => setViewBy(type)}
-                  className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all ${viewBy === type ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
-                    }`}
+                  onClick={() => changeWeek(-1)}
+                  className="w-7 h-7 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95"
                 >
-                  {type.toUpperCase()}
+                  <ChevronLeft size={14} />
                 </button>
-              ))}
-            </div>
 
-            {/* Stats */}
-            <div className="hidden md:flex items-center gap-1 text-[9px]">
-              <div className="flex flex-col items-end">
-                <div className="font-black text-gray-900">{employees.length} Staff</div>
-                <div className="text-gray-400 font-bold leading-none capitalize text-[8px]">
-                  active roster
+                <div className="px-1 py-0.5 flex flex-col items-center min-w-[110px]">
+                  <div className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">
+                    Current Week
+                  </div>
+                  <div className="text-[10px] sm:text-xs font-bold text-gray-700 text-center">
+                    {formatDateRange(weekDates[0], weekDates[6])}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => changeWeek(1)}
+                  className="w-7 h-7 rounded-md bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:text-blue-600 hover:border-blue-300 transition-all shadow-sm active:scale-95"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+
+              {/* Today Button */}
+              <button
+                onClick={handleGoToToday}
+                className="px-2 py-1 text-[9px] font-black text-gray-500 hover:text-blue-600 transition-all uppercase tracking-widest hidden sm:block"
+              >
+                Today
+              </button>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 mt-2 sm:mt-0">
+
+              {/* View Toggle */}
+              <div className="flex bg-gray-100 p-0.5 rounded-lg border border-gray-200">
+                {["staff", "client"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setViewBy(type)}
+                    className={`px-2 py-0.5 text-[9px] font-black rounded-md transition-all ${viewBy === type ? "bg-white text-blue-600 shadow-sm" : "text-gray-400 hover:text-gray-600"
+                      }`}
+                  >
+                    {type.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              {/* Stats */}
+              <div className="hidden md:flex items-center gap-1 text-[9px]">
+                <div className="flex flex-col items-end">
+                  <div className="font-black text-gray-900">{employees.length} Staff</div>
+                  <div className="text-gray-400 font-bold leading-none capitalize text-[8px]">
+                    active roster
+                  </div>
+                </div>
+                <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-[9px]">
+                  {Math.round(calculateTotalWeeklyHours())}h
                 </div>
               </div>
-              <div className="w-7 h-7 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-black text-[9px]">
-                {Math.round(calculateTotalWeeklyHours())}h
-              </div>
-            </div>
 
-            {/* Shift Button */}
-            <button
-              onClick={() => openAddShift(null, new Date().toISOString())}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-[10px] font-black shadow-sm active:translate-y-0.5"
-            >
-              <Plus size={12} />
-              <span>SHIFT</span>
-            </button>
+              {/* Shift Button */}
+              <button
+                onClick={() => openAddShift(null, new Date().toISOString())}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-[10px] font-black shadow-sm active:translate-y-0.5"
+              >
+                <Plus size={12} />
+                <span>SHIFT</span>
+              </button>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
 
-      {/* --- ROSTER GRID (SCROLLABLE AREA) --- */}
-      <main className="flex-1 overflow-auto bg-gray-50 relative custom-scrollbar">
-        <div className="w-full">
-          {/* Desktop Roster Header (Sticky at top of scroll area) */}
-          <div className="hidden lg:block sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
-            <div className="flex">
-              <div className="w-36 sticky left-0 z-40 flex-shrink-0 p-2 flex flex-col justify-center border-r border-gray-100 bg-white/95 backdrop-blur-md">
-                <div className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">
-                  Workforce
+        {/* --- ROSTER GRID (SCROLLABLE AREA) --- */}
+        <main className="flex-1 overflow-auto bg-gray-50 relative custom-scrollbar">
+          <div className="w-full">
+            {/* Desktop Roster Header (Sticky at top of scroll area) */}
+            <div className="hidden lg:block sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+              <div className="flex">
+                <div className="w-36 sticky left-0 z-40 flex-shrink-0 p-2 flex flex-col justify-center border-r border-gray-100 bg-white/95 backdrop-blur-md">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-[0.2em] mb-0.5">
+                    Workforce
+                  </div>
+                  <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">hours</div>
                 </div>
-                <div className="text-[8px] font-bold text-gray-400 uppercase tracking-widest leading-none">hours</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex w-full">
+                    {weekDates.map((date, i) => {
+                      const isToday = new Date(date).toDateString() === new Date().toDateString();
+                      const dayName = new Date(date).toLocaleDateString('en-AU', { weekday: 'short' }).toUpperCase();
+                      const dayNum = new Date(date).getDate();
+
+                      return (
+                        <div key={i} className={`flex-1 min-w-0 px-1 border-l border-transparent first:border-l-0 text-center py-1 overflow-hidden`}>
+                          <div className={`text-[8px] font-black tracking-widest truncate ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
+                            {dayName}
+                          </div>
+                          <div className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black transition-all ${isToday ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-800 hover:bg-gray-100'
+                            }`}>
+                            {dayNum}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex w-full">
-                  {weekDates.map((date, i) => {
-                    const isToday = new Date(date).toDateString() === new Date().toDateString();
-                    const dayName = new Date(date).toLocaleDateString('en-AU', { weekday: 'short' }).toUpperCase();
-                    const dayNum = new Date(date).getDate();
+            </div>
+            {/* Roster Data Rows */}
+            <div className="hidden lg:block">
+              {(viewBy === 'staff' ? employees : clients).length === 0 ? (
+                <div className="text-center py-20 bg-white border-b border-gray-200">
+                  <div className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-4">Empty Roster Database</div>
+                  <Link
+                    to={viewBy === 'staff' ? "/addstaff" : "/addclient"}
+                    className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-black text-xs"
+                  >
+                    <Plus size={14} /> INITIALIZE {viewBy === 'staff' ? 'STAFF' : 'CLIENT'}
+                  </Link>
+                </div>
+              ) : (
+                (viewBy === 'staff' ? employees : clients).map(rowItem => (
+                  <RosterRow
+                    key={rowItem.id}
+                    rowItem={rowItem}
+                    viewBy={viewBy}
+                    weekDates={weekDates}
+                    getShifts={getShiftsForCell}
+                    onAddShift={openAddShift}
+                    onEditShift={openViewShift}
+                    onDropShift={handleDropShift}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Mobile Management View */}
+            <div className="lg:hidden bg-gray-50/50">
+              {/* Day Selector Strip - High Density */}
+              <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200 overflow-x-auto no-scrollbar py-1 px-2">
+                <div className="flex gap-1">
+                  {weekDates.map((date, index) => {
+                    const dayDate = new Date(date);
+                    const isToday = dayDate.toDateString() === new Date().toDateString();
+                    const isSelected = expandedDayIndex === index;
 
                     return (
-                      <div key={i} className={`flex-1 min-w-0 px-1 border-l border-transparent first:border-l-0 text-center py-1 overflow-hidden`}>
-                        <div className={`text-[8px] font-black tracking-widest truncate ${isToday ? 'text-blue-600' : 'text-gray-400'}`}>
-                          {dayName}
+                      <button
+                        key={date}
+                        onClick={() => setExpandedDayIndex(index)}
+                        className={`flex-shrink-0 w-10 h-12 rounded-xl transition-all flex flex-col items-center justify-center border ${isSelected
+                          ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105'
+                          : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
+                          }`}
+                      >
+                        <div
+                          className={`text-[8px] font-black uppercase tracking-tighter mb-0.5 ${isSelected ? 'text-blue-100' : 'text-gray-400'
+                            }`}
+                        >
+                          {dayDate.toLocaleDateString('en-AU', { weekday: 'short' })}
                         </div>
-                        <div className={`mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-[10px] font-black transition-all ${isToday ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-800 hover:bg-gray-100'
-                          }`}>
-                          {dayNum}
+                        <div className="text-sm font-black leading-none">
+                          {dayDate.getDate()}
                         </div>
-                      </div>
+                        {isToday && !isSelected && (
+                          <div className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />
+                        )}
+                      </button>
                     );
                   })}
                 </div>
               </div>
-            </div>
-          </div>
-          {/* Roster Data Rows */}
-          <div className="hidden lg:block">
-            {(viewBy === 'staff' ? employees : clients).length === 0 ? (
-              <div className="text-center py-20 bg-white border-b border-gray-200">
-                <div className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-4">Empty Roster Database</div>
-                <Link
-                  to={viewBy === 'staff' ? "/addstaff" : "/addclient"}
-                  className="inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-black text-xs"
-                >
-                  <Plus size={14} /> INITIALIZE {viewBy === 'staff' ? 'STAFF' : 'CLIENT'}
-                </Link>
-              </div>
-            ) : (
-              (viewBy === 'staff' ? employees : clients).map(rowItem => (
-                <RosterRow
-                  key={rowItem.id}
-                  rowItem={rowItem}
-                  viewBy={viewBy}
-                  weekDates={weekDates}
-                  getShifts={getShiftsForCell}
-                  onAddShift={openAddShift}
-                  onEditShift={openViewShift}
-                  onDropShift={handleDropShift}
-                />
-              ))
-            )}
-          </div>
 
-          {/* Mobile Management View */}
-          <div className="lg:hidden bg-gray-50/50">
-            {/* Day Selector Strip - High Density */}
-            <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200 overflow-x-auto no-scrollbar py-1 px-2">
-              <div className="flex gap-1">
-                {weekDates.map((date, index) => {
-                  const dayDate = new Date(date);
-                  const isToday = dayDate.toDateString() === new Date().toDateString();
-                  const isSelected = expandedDayIndex === index;
+
+              {/* Daily Management List */}
+              <div className="p-3 space-y-4 pb-20">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-black text-gray-900 text-sm uppercase tracking-widest">
+                    {new Date(weekDates[expandedDayIndex || 0]).toLocaleDateString('en-AU', { dateStyle: 'long' })}
+                  </h3>
+                  <div className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                    {shifts.filter(s => s.shift_date === weekDates[expandedDayIndex || 0]).length} SHIFTS
+                  </div>
+                </div>
+
+                {(viewBy === 'staff' ? employees : clients).map(rowItem => {
+                  const displayName = viewBy === 'staff'
+                    ? (rowItem.name || 'Unassigned')
+                    : `${rowItem.first_name || ''} ${rowItem.last_name || ''}`.trim() || 'No Client';
+
+                  const initials = displayName
+                    .split(' ')
+                    .filter(Boolean)
+                    .map(n => n[0])
+                    .join('')
+                    .toUpperCase()
+                    .slice(0, 2) || '??';
+
+                  const dayShifts = getShiftsForCell(rowItem.id, weekDates[expandedDayIndex || 0]);
 
                   return (
-                    <button
-                      key={date}
-                      onClick={() => setExpandedDayIndex(index)}
-                      className={`flex-shrink-0 w-10 h-12 rounded-xl transition-all flex flex-col items-center justify-center border ${isSelected
-                        ? 'bg-blue-600 border-blue-600 text-white shadow-md scale-105'
-                        : 'bg-white border-gray-100 text-gray-500 hover:border-blue-200'
-                        }`}
-                    >
-                      <div
-                        className={`text-[8px] font-black uppercase tracking-tighter mb-0.5 ${isSelected ? 'text-blue-100' : 'text-gray-400'
-                          }`}
-                      >
-                        {dayDate.toLocaleDateString('en-AU', { weekday: 'short' })}
+                    <div key={rowItem.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                      <div className="p-3 bg-gray-50/50 flex items-center justify-between border-b border-gray-100">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">
+                            {initials}
+                          </div>
+                          <div>
+                            <div className="text-xs font-black text-gray-900 uppercase tracking-tight">{displayName}</div>
+                            <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{viewBy === 'staff' ? (rowItem.role || 'Staff') : 'Client'}</div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => openAddShift(rowItem.id, weekDates[expandedDayIndex || 0])}
+                          className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-blue-600 shadow-sm active:scale-90 transition-all"
+                        >
+                          <Plus size={16} />
+                        </button>
                       </div>
-                      <div className="text-sm font-black leading-none">
-                        {dayDate.getDate()}
+                      <div className="p-2">
+                        {dayShifts.length === 0 ? (
+                          <div className="py-4 text-center text-[10px] text-gray-300 font-bold uppercase tracking-widest italic">
+                            No shifts scheduled
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {dayShifts.map((s, idx) => (
+                              <div
+                                key={s.id}
+                                onClick={() => openEditShift(s)}
+                                className="p-3 rounded-xl border-l-4 bg-gray-50/30 border-gray-200 shadow-sm"
+                                style={{ borderLeftColor: s.color || getShiftColor(idx) }}
+                              >
+                                <div className="flex justify-between items-start mb-1">
+                                  <div className="text-[11px] font-black text-gray-900 uppercase">
+                                    {viewBy === 'staff' ? (s.client_name || 'No Client') : (s.staff_name || 'Unassigned')}
+                                  </div>
+                                  <div className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg italic">
+                                    {s.start_time} - {s.end_time}
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                                    {s.shift_type_name || 'Standard'}
+                                  </div>
+                                  {s.hasConflict && (
+                                    <div className="text-[9px] font-black text-red-600 flex items-center gap-1">
+                                      <AlertCircle size={10} /> CONFLICT
+                                    </div>
+                                  )}
+                                  <div className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${s.status === 'published' ? 'bg-blue-100 text-blue-600' :
+                                    s.status === 'completed' ? 'bg-green-100 text-green-600' :
+                                      'bg-amber-100 text-amber-600'
+                                    }`}>
+                                    {s.status === 'published' ? 'Live' : s.status === 'completed' ? 'Done' : 'Draft'}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {isToday && !isSelected && (
-                        <div className="w-1 h-1 rounded-full bg-blue-600 mt-0.5" />
-                      )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
+          </div>
+        </main >
+        {/* --- FOOTER UTILITIES (GLASSMORPHIC) --- */}
+        <footer className="flex-shrink-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-3 z-50">
+          <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
 
-
-            {/* Daily Management List */}
-            <div className="p-3 space-y-4 pb-20">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-black text-gray-900 text-sm uppercase tracking-widest">
-                  {new Date(weekDates[expandedDayIndex || 0]).toLocaleDateString('en-AU', { dateStyle: 'long' })}
-                </h3>
-                <div className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                  {shifts.filter(s => s.shift_date === weekDates[expandedDayIndex || 0]).length} SHIFTS
-                </div>
+            {/* Left Section */}
+            <div className="flex items-center gap-3">
+              <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:block">
+                Status:{" "}
+                <span className="text-blue-600 ml-1">{shifts.length} Live Shifts</span>
               </div>
 
-              {(viewBy === 'staff' ? employees : clients).map(rowItem => {
-                const displayName = viewBy === 'staff'
-                  ? (rowItem.name || 'Unassigned')
-                  : `${rowItem.first_name || ''} ${rowItem.last_name || ''}`.trim() || 'No Client';
+              {/* Mobile Status */}
+              <div className="sm:hidden text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                {shifts.length} Shifts
+              </div>
 
-                const initials = displayName
-                  .split(' ')
-                  .filter(Boolean)
-                  .map(n => n[0])
-                  .join('')
-                  .toUpperCase()
-                  .slice(0, 2) || '??';
+              {shifts.some((s) => s.hasConflict) && (
+                <button
+                  onClick={handleCleanConflicts}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full text-[9px] font-black uppercase tracking-tighter hover:bg-red-100 transition-all"
+                >
+                  <Sparkles size={14} />
+                  <span className="hidden sm:inline">Clean Conflicts</span>
+                </button>
+              )}
+            </div>
 
-                const dayShifts = getShiftsForCell(rowItem.id, weekDates[expandedDayIndex || 0]);
+            {/* Right Section */}
+            <div className="flex items-center gap-2">
 
-                return (
-                  <div key={rowItem.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-                    <div className="p-3 bg-gray-50/50 flex items-center justify-between border-b border-gray-100">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600 font-black text-xs">
-                          {initials}
-                        </div>
-                        <div>
-                          <div className="text-xs font-black text-gray-900 uppercase tracking-tight">{displayName}</div>
-                          <div className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">{viewBy === 'staff' ? (rowItem.role || 'Staff') : 'Client'}</div>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => openAddShift(rowItem.id, weekDates[expandedDayIndex || 0])}
-                        className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center text-blue-600 shadow-sm active:scale-90 transition-all"
-                      >
-                        <Plus size={16} />
-                      </button>
-                    </div>
-                    <div className="p-2">
-                      {dayShifts.length === 0 ? (
-                        <div className="py-4 text-center text-[10px] text-gray-300 font-bold uppercase tracking-widest italic">
-                          No shifts scheduled
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {dayShifts.map((s, idx) => (
-                            <div
-                              key={s.id}
-                              onClick={() => openEditShift(s)}
-                              className="p-3 rounded-xl border-l-4 bg-gray-50/30 border-gray-200 shadow-sm"
-                              style={{ borderLeftColor: s.color || getShiftColor(idx) }}
-                            >
-                              <div className="flex justify-between items-start mb-1">
-                                <div className="text-[11px] font-black text-gray-900 uppercase">
-                                  {viewBy === 'staff' ? (s.client_name || 'No Client') : (s.staff_name || 'Unassigned')}
-                                </div>
-                                <div className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg italic">
-                                  {s.start_time} - {s.end_time}
-                                </div>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
-                                  {s.shift_type_name || 'Standard'}
-                                </div>
-                                {s.hasConflict && (
-                                  <div className="text-[9px] font-black text-red-600 flex items-center gap-1">
-                                    <AlertCircle size={10} /> CONFLICT
-                                  </div>
-                                )}
-                                <div className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase tracking-widest ${s.status === 'published' ? 'bg-blue-100 text-blue-600' :
-                                  s.status === 'completed' ? 'bg-green-100 text-green-600' :
-                                    'bg-amber-100 text-amber-600'
-                                  }`}>
-                                  {s.status === 'published' ? 'Live' : s.status === 'completed' ? 'Done' : 'Draft'}
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+              <button
+                onClick={handleCopyLastWeek}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              >
+                <Copy size={14} className="sm:hidden" />
+                <span className="hidden sm:inline">Copy Last Week</span>
+              </button>
+
+              <button
+                onClick={handleDeleteAllShifts}
+                className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
+              >
+                <Trash2 size={14} className="sm:hidden" />
+                <span className="hidden sm:inline">Clear Week</span>
+              </button>
+
+              <button
+                onClick={handlePublishRoster}
+                className="flex items-center justify-center gap-2 px-3 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-[10px] font-black uppercase tracking-[0.1em] shadow-lg shadow-blue-200"
+              >
+                <Send size={14} className="sm:hidden" />
+                <span className="hidden sm:inline">Publish Roster</span>
+              </button>
+
             </div>
           </div>
+        </footer>
+
+        {/* Modal Portal */}
+        <ShiftModal
+          visible={modalVisible}
+          shift={editingShift}
+          onClose={() => {
+            setModalVisible(false);
+            setEditingShift(null);
+          }}
+          onSave={handleSaveShift}
+          onDelete={() => handleDeleteShift(editingShift?.id)}
+          staffList={staffList}
+        />
+
+        <ShiftDetailsModal
+          visible={detailsVisible}
+          shift={viewingShift}
+          onClose={() => {
+            setDetailsVisible(false);
+            setViewingShift(null);
+          }}
+          onEdit={openEditShift}
+          onDelete={handleDeleteShift}
+          onUpdateStatus={async (id, status) => {
+            const { error } = await supabase.from('shifts').update({ status }).eq('id', id).eq('tenant_id', currentStaff.tenant_id);
+            if (error) toast.error('Failed to update status');
+            else {
+              toast.success(`Shift marked as ${status}`);
+              fetchData();
+              setDetailsVisible(false);
+            }
+          }}
+          staffList={staffList}
+          onCopyToStaff={handleCopyShiftToStaff}
+          onApprove={async (id) => {
+            try {
+              const { error } = await supabase
+                .from('staff_shifts')
+                .update({ approved: true, updated_at: new Date().toISOString() })
+                .eq('shift_id', id)
+                .eq('tenant_id', currentStaff.tenant_id);
+
+              if (error) throw error;
+              toast.success('Shift Tactical Approval Secured');
+              fetchData();
+              setDetailsVisible(false);
+            } catch (err) {
+              console.error('Approval fail:', err);
+              toast.error('Approval Authorization Failure');
+            }
+          }}
+        />
+      </div>
+
+      {loading && (
+        <div className="fixed inset-0 z-[1000] bg-white/50 backdrop-blur-sm flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
+            <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING SHIFTS DATA...</div>
+          </div>
         </div>
-      </main >
-      {/* --- FOOTER UTILITIES (GLASSMORPHIC) --- */}
-     <footer className="flex-shrink-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-3 z-50">
-  <div className="max-w-[1600px] mx-auto flex items-center justify-between gap-3">
-    
-    {/* Left Section */}
-    <div className="flex items-center gap-3">
-      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest hidden sm:block">
-        Status:{" "}
-        <span className="text-blue-600 ml-1">{shifts.length} Live Shifts</span>
-      </div>
-
-      {/* Mobile Status */}
-      <div className="sm:hidden text-[10px] font-black text-blue-600 uppercase tracking-widest">
-        {shifts.length} Shifts
-      </div>
-
-      {shifts.some((s) => s.hasConflict) && (
-        <button
-          onClick={handleCleanConflicts}
-          className="flex items-center justify-center gap-1.5 px-3 py-2 bg-red-50 text-red-600 border border-red-100 rounded-full text-[9px] font-black uppercase tracking-tighter hover:bg-red-100 transition-all"
-        >
-          <Sparkles size={14} />
-          <span className="hidden sm:inline">Clean Conflicts</span>
-        </button>
       )}
-    </div>
-
-    {/* Right Section */}
-    <div className="flex items-center gap-2">
-      
-      <button
-        onClick={handleCopyLastWeek}
-        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white text-gray-700 border border-gray-200 rounded-lg hover:border-blue-400 hover:text-blue-600 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
-      >
-        <Copy size={14} className="sm:hidden" />
-        <span className="hidden sm:inline">Copy Last Week</span>
-      </button>
-
-      <button
-        onClick={handleDeleteAllShifts}
-        className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-50 text-red-600 border border-red-100 rounded-lg hover:bg-red-100 transition-all text-[10px] font-black uppercase tracking-widest shadow-sm"
-      >
-        <Trash2 size={14} className="sm:hidden" />
-        <span className="hidden sm:inline">Clear Week</span>
-      </button>
-
-      <button
-        onClick={handlePublishRoster}
-        className="flex items-center justify-center gap-2 px-3 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all text-[10px] font-black uppercase tracking-[0.1em] shadow-lg shadow-blue-200"
-      >
-        <Send size={14} className="sm:hidden" />
-        <span className="hidden sm:inline">Publish Roster</span>
-      </button>
-
-    </div>
-  </div>
-</footer>
-
-      {/* Modal Portal */}
-      <ShiftModal
-        visible={modalVisible}
-        shift={editingShift}
-        onClose={() => {
-          setModalVisible(false);
-          setEditingShift(null);
-        }}
-        onSave={handleSaveShift}
-        onDelete={() => handleDeleteShift(editingShift?.id)}
-        staffList={staffList}
-      />
-
-      <ShiftDetailsModal
-        visible={detailsVisible}
-        shift={viewingShift}
-        onClose={() => {
-          setDetailsVisible(false);
-          setViewingShift(null);
-        }}
-        onEdit={openEditShift}
-        onDelete={handleDeleteShift}
-        onUpdateStatus={async (id, status) => {
-          const { error } = await supabase.from('shifts').update({ status }).eq('id', id).eq('tenant_id', currentStaff.tenant_id);
-          if (error) toast.error('Failed to update status');
-          else {
-            toast.success(`Shift marked as ${status}`);
-            fetchData();
-            setDetailsVisible(false);
-          }
-        }}
-        staffList={staffList}
-        onCopyToStaff={handleCopyShiftToStaff}
-        onApprove={async (id) => {
-          try {
-            const { error } = await supabase
-              .from('staff_shifts')
-              .update({ approved: true, updated_at: new Date().toISOString() })
-              .eq('shift_id', id)
-              .eq('tenant_id', currentStaff.tenant_id);
-
-            if (error) throw error;
-            toast.success('Shift Tactical Approval Secured');
-            fetchData();
-            setDetailsVisible(false);
-          } catch (err) {
-            console.error('Approval fail:', err);
-            toast.error('Approval Authorization Failure');
-          }
-        }}
-      />
-    </div>
+    </>
   );
 }

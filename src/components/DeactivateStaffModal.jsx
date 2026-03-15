@@ -1,10 +1,11 @@
+import { createPortal } from "react-dom";
 import React from "react";
 import { X, AlertTriangle, UserX, ShieldAlert, ChevronRight } from "lucide-react";
 
 function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
     if (!staff) return null;
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 z-[70] animate-in fade-in duration-300">
             <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500 flex flex-col">
 
@@ -17,8 +18,8 @@ function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
                             <UserX size={24} className="text-white" />
                         </div>
                         <div>
-                            <h2 className="text-lg font-black tracking-tight uppercase italic">Strategic Deactivation</h2>
-                            <p className="text-[10px] font-bold text-rose-300 uppercase tracking-widest mt-0.5">Personnel Status Revocation</p>
+                            <h2 className="text-lg font-black tracking-tight uppercase italic">Deactivate Staff</h2>
+                            <p className="text-[10px] font-bold text-rose-300 uppercase tracking-widest mt-0.5">Suspend staff member account</p>
                         </div>
                     </div>
 
@@ -48,7 +49,7 @@ function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
                             <div className="absolute -bottom-1 -right-1 h-4 w-4 bg-rose-500 rounded-full border-2 border-white"></div>
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Target Personnel</p>
+                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Staff Member</p>
                             <p className="text-[14px] font-black text-slate-900 truncate uppercase tracking-tight">{staff.name}</p>
                         </div>
                     </div>
@@ -58,14 +59,14 @@ function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
                         <div className="relative">
                             <div className="flex items-center gap-2 mb-4">
                                 <ShieldAlert size={14} className="text-rose-400" />
-                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Security Impact Analysis</h4>
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-rose-400">Deactivation Impact</h4>
                             </div>
                             <ul className="space-y-3">
                                 {[
-                                    "Revoke all portal access immediately",
-                                    "Preserve historical records (Soft-Delete)",
-                                    "Archive strategic performance data",
-                                    "Suspend active roster availability"
+                                    "Revoke login access immediately",
+                                    "Preserve historical records",
+                                    "Archive performance data",
+                                    "Remove from active roster"
                                 ].map((item, i) => (
                                     <li key={i} className="flex items-start gap-3">
                                         <div className="h-4 w-4 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -86,7 +87,7 @@ function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
                         className="px-6 py-2.5 text-slate-400 hover:text-slate-600 text-[10px] font-black uppercase tracking-widest transition-all"
                         disabled={loading}
                     >
-                        Cancel Procedure
+                        Cancel
                     </button>
                     <button
                         onClick={onConfirm}
@@ -103,7 +104,8 @@ function DeactivateStaffModal({ staff, onClose, onConfirm, loading }) {
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 

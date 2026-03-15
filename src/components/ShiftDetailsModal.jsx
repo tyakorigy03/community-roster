@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useState } from 'react';
 import {
     X,
@@ -93,8 +94,8 @@ export default function ShiftDetailsModal({
 
     const statusObj = getStatusConfig(getShiftStatus(shift));
 
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 overflow-hidden">
+    return createPortal(
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-6 overflow-hidden">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
@@ -102,7 +103,7 @@ export default function ShiftDetailsModal({
             />
 
             {/* Modal Card */}
-            <div className={`relative w-full max-h-[95vh] flex flex-col ${(shift.clock_in_photo_url || shift.clock_out_photo_url || shift.clock_in_location || shift.clock_out_location) ? 'max-w-4xl' : 'max-w-xl'} bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300`}>
+            <div className={`relative w-full max-h-[80vh] flex flex-col ${(shift.clock_in_photo_url || shift.clock_out_photo_url || shift.clock_in_location || shift.clock_out_location) ? 'max-w-4xl' : 'max-w-xl'} bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300`}>
                 {/* Header - Tactical Design */}
                 <div className="relative p-4 sm:p-6 bg-slate-900 border-b border-slate-700 shrink-0">
                     <button
@@ -118,7 +119,7 @@ export default function ShiftDetailsModal({
                         </div>
                         <div>
                             <h2 className="text-lg sm:text-xl font-black text-white uppercase tracking-tight leading-none">
-                                Shift Details
+                                Service Details
                             </h2>
                             <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-1">
                                 {shift.shift_type_name || 'Standard Service'} • #{shift.id?.slice(0, 8)}
@@ -307,15 +308,15 @@ export default function ShiftDetailsModal({
                             <div className="space-y-4 pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-slate-100 md:pl-6">
                                 <div className="flex items-center gap-2 mb-2">
                                     <span className="p-1.5 bg-blue-50 text-blue-600 rounded-lg shrink-0"><CheckCircle2 size={16} /></span>
-                                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Verification Evidence</span>
-                                    <span className="ml-auto text-[8px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">Archived Payload</span>
+                                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">Service Verification</span>
+                                    <span className="ml-auto text-[8px] font-black text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full uppercase">Service Record</span>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {/* Clock In Payload */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">In-Stream</span>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Arrival Details</span>
                                             {shift.clock_in && (
                                                 <span className="text-[9px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
                                                     {new Date(shift.clock_in).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -326,7 +327,7 @@ export default function ShiftDetailsModal({
                                         {shift.clock_in_photo_url ? (
                                             <div className="aspect-[4/3] rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-100 relative group shadow-sm transition-all hover:border-blue-200">
                                                 <img src={shift.clock_in_photo_url} className="w-full h-full object-cover" alt="Clock In" />
-                                                <a href={shift.clock_in_photo_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest backdrop-blur-[2px]">Zoom Lens</a>
+                                                <a href={shift.clock_in_photo_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest backdrop-blur-[2px]">View Photo</a>
                                             </div>
                                         ) : (
                                             <div className="aspect-[4/3] rounded-2xl border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300">
@@ -348,7 +349,7 @@ export default function ShiftDetailsModal({
                                                     rel="noreferrer"
                                                     className="block w-full text-center py-1.5 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
                                                 >
-                                                    Map Intel
+                                                    View Location
                                                 </a>
                                             </div>
                                         )}
@@ -357,7 +358,7 @@ export default function ShiftDetailsModal({
                                     {/* Clock Out Payload */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Out-Stream</span>
+                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Departure Details</span>
                                             {shift.clock_out && (
                                                 <span className="text-[9px] font-black text-slate-600 bg-slate-100 px-2 py-0.5 rounded-lg">
                                                     {new Date(shift.clock_out).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -368,7 +369,7 @@ export default function ShiftDetailsModal({
                                         {shift.clock_out_photo_url ? (
                                             <div className="aspect-[4/3] rounded-2xl overflow-hidden border-2 border-slate-100 bg-slate-100 relative group shadow-sm transition-all hover:border-blue-200">
                                                 <img src={shift.clock_out_photo_url} className="w-full h-full object-cover" alt="Clock Out" />
-                                                <a href={shift.clock_out_photo_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest backdrop-blur-[2px]">Zoom Lens</a>
+                                                <a href={shift.clock_out_photo_url} target="_blank" rel="noreferrer" className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[9px] font-black uppercase tracking-widest backdrop-blur-[2px]">View Photo</a>
                                             </div>
                                         ) : (
                                             <div className="aspect-[4/3] rounded-2xl border-2 border-dashed border-slate-100 flex items-center justify-center text-slate-300">
@@ -390,7 +391,7 @@ export default function ShiftDetailsModal({
                                                     rel="noreferrer"
                                                     className="block w-full text-center py-1.5 bg-white border border-slate-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all"
                                                 >
-                                                    Map Intel
+                                                    View Location
                                                 </a>
                                             </div>
                                         )}
@@ -404,13 +405,13 @@ export default function ShiftDetailsModal({
                 {/* Footer */}
                 <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
                     <div className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                        Payload Updated: {new Date(shift.updated_at || shift.created_at).toLocaleDateString()}
+                        Last Updated: {new Date(shift.updated_at || shift.created_at).toLocaleDateString()}
                     </div>
                     <button
                         onClick={onClose}
                         className="px-6 py-2 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-lg active:scale-95"
                     >
-                        Terminal Exit
+                        Close
                     </button>
                 </div>
             </div>
@@ -539,6 +540,7 @@ export default function ShiftDetailsModal({
                     onClose(); // Close details too to refresh parent
                 }}
             />
-        </div>
+        </div>,
+        document.body
     );
 }

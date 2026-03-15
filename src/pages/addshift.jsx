@@ -1,5 +1,6 @@
-import { X, Search, User, Calendar, Clock, Users, ChevronDown, Check, CheckCircle2, Sparkles, Repeat,Loader2,Save, AlertCircle } from "lucide-react";
+import { X, User, Calendar, Clock, Users, ChevronDown, Check, CheckCircle2, Sparkles, Repeat, Loader2, Save, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { useUser } from "../context/UserContext";
 
@@ -29,7 +30,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
   const { currentStaff } = useUser();
   const [formData, setFormData] = useState({
     client_id: '',
-    staff_ids: [], // Changed to array for multi-staff support
+    staff_ids: [],
     shift_date: '',
     start_time: '09:00',
     end_time: '17:00',
@@ -39,7 +40,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
     is_recurring: false,
     frequency: 'weekly',
     repeat_until: '',
-    selected_days: [], // Array of day indices (0=Sun, 1=Mon, ..., 6=Sat)
+    selected_days: [],
     notes: '',
   });
 
@@ -76,7 +77,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
       setFormData({
         id: shift.id,
         client_id: shift.client_id || '',
-        staff_ids: shift.staff_ids || (shift.staff_id ? [shift.staff_id] : []), // Support both formats
+        staff_ids: shift.staff_ids || (shift.staff_id ? [shift.staff_id] : []),
         shift_date: shift.shift_date || TODAY_ISO(),
         start_time: shift.start_time || '09:00',
         end_time: shift.end_time || '17:00',
@@ -169,8 +170,8 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
 
   if (!visible) return null;
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-hidden">
+  return createPortal(
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
 
       <div className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in duration-300">
@@ -178,11 +179,11 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
         <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-200">
-              <Sparkles size={20} />
+              <Calendar size={20} />
             </div>
             <div>
               <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight leading-none">
-                {shift?.id ? 'Edit Mission' : 'Create Mission'}
+                {shift?.id ? 'Edit Shift' : 'Create Shift'}
               </h2>
               <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-1">
                 {shift?.id ? 'Update existing shift details' : 'Schedule a new service'}
@@ -195,10 +196,10 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-          {/* CLIENT & TYPE SECTION */}
+          {/* CLIENT & STAFF SECTION */}
           <div className="space-y-4">
             <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest px-1 flex items-center gap-2">
-              <Users size={12} /> Core Assignment
+              <Users size={12} /> Client & Staffing
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -244,7 +245,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
 
               <div className="group">
                 <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
-                  Activity Type
+                  Shift Type
                 </label>
                 <div className="relative">
                   <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={16} />
@@ -254,7 +255,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                     onChange={handleInputChange}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   >
-                    <option value="">Select Service...</option>
+                    <option value="">Select Shift Type...</option>
                     {shiftTypes.map(t => (
                       <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
@@ -268,7 +269,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
           {/* DATE & TIME SECTION */}
           <div className="space-y-4">
             <div className="text-[10px] font-black text-indigo-600 uppercase tracking-widest px-1 flex items-center gap-2">
-              <Clock size={12} /> Scheduling
+              <Clock size={12} /> Shift Timing
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -305,7 +306,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                   <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" size={16} />
 
                   {showStaffDropdown && (
-                    <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-64 overflow-y-auto p-2 animate-in fade-in slide-in-from-top-2">
+                    <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-2xl shadow-xl max-h-64 overflow-y-auto p-2">
                       <div className="flex items-center justify-between p-2 border-b border-slate-100 mb-2">
                         <button
                           type="button"
@@ -400,7 +401,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="group">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">In</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Start Time</label>
                 <input
                   type="time"
                   name="start_time"
@@ -410,7 +411,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                 />
               </div>
               <div className="group">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Out</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">End Time</label>
                 <input
                   type="time"
                   name="end_time"
@@ -420,7 +421,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                 />
               </div>
               <div className="group col-span-2 sm:col-span-1">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Break (m)</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Break (min)</label>
                 <input
                   type="number"
                   name="break_minutes"
@@ -444,7 +445,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                   className="w-4 h-4 text-blue-600 rounded-lg border-slate-300 focus:ring-blue-500/20"
                 />
                 <span className="text-[10px] font-black text-slate-700 uppercase tracking-widest flex items-center gap-2">
-                  <Repeat size={12} /> Repeat Mission
+                  <Repeat size={12} /> Repeat Shift
                 </span>
               </label>
             </div>
@@ -466,7 +467,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Repeat Until (End Date)</label>
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Repeat Until</label>
                     <input
                       type="date"
                       name="repeat_until"
@@ -522,12 +523,6 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
                         );
                       })}
                     </div>
-                    {formData.selected_days.length === 0 && (
-                      <p className="text-[9px] text-amber-600 font-bold uppercase tracking-wide flex items-center gap-1.5 bg-amber-50 p-2 rounded-lg">
-                        <AlertCircle size={12} />
-                        Will repeat on the same day as start date
-                      </p>
-                    )}
                   </div>
                 )}
               </div>
@@ -540,7 +535,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
             </div>
 
             <div className="group">
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Current State</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Shift Status</label>
               <div className="relative">
                 <CheckCircle2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-blue-500 transition-colors" size={16} />
                 <select
@@ -562,7 +557,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
               name="notes"
               value={formData.notes}
               onChange={handleInputChange}
-              placeholder="Additional shift instructions..."
+              placeholder="Shift notes or instructions..."
               rows={3}
               className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
             />
@@ -572,59 +567,56 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
         {/* Footer */}
         <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
   
-  {/* Duration */}
-  <div className="flex flex-col">
-    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1 hidden sm:block">
-      Duration
-    </span>
+          {/* Duration */}
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] leading-none mb-1 hidden sm:block">
+              Total Duration
+            </span>
+            <span className="text-sm font-black text-blue-600 leading-none">
+              {(() => {
+                const start = parseTime(formData.start_time);
+                let end = parseTime(formData.end_time);
+                if (end < start) end += 24;
+                const hours = end - start - (formData.break_minutes / 60);
+                return hours > 0 ? formatHours(hours) : "0h";
+              })()}
+            </span>
+          </div>
 
-    <span className="text-sm font-black text-blue-600 leading-none">
-      {(() => {
-        const start = parseTime(formData.start_time);
-        let end = parseTime(formData.end_time);
-        if (end < start) end += 24;
-        const hours = end - start - (formData.break_minutes / 60);
-        return hours > 0 ? formatHours(hours) : "0h";
-      })()}
-    </span>
-  </div>
+          {/* Buttons */}
+          <div className="flex gap-2 sm:gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 px-3 sm:px-6 py-3 bg-white text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+            >
+              <X size={16} className="sm:hidden" />
+              <span className="hidden sm:inline">Cancel</span>
+            </button>
 
-  {/* Buttons */}
-  <div className="flex gap-2 sm:gap-3">
-    
-    <button
-      type="button"
-      onClick={onClose}
-      className="flex items-center justify-center gap-2 px-3 sm:px-6 py-2.5 bg-white text-slate-600 border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
-    >
-      <X size={16} className="sm:hidden" />
-      <span className="hidden sm:inline">Cancel</span>
-    </button>
-
-    <button
-      onClick={handleSubmit}
-      disabled={isSubmitting}
-      className="flex items-center justify-center gap-2 px-4 sm:px-8 py-2.5 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50"
-    >
-      {isSubmitting ? (
-        <>
-          <Loader2 size={16} className="animate-spin sm:hidden" />
-          <span className="hidden sm:inline">Saving...</span>
-        </>
-      ) : (
-        <>
-          <Save size={16} className="sm:hidden" />
-          <span className="hidden sm:inline">
-            {shift?.id ? "Update Mission" : "Deploy Shift"}
-          </span>
-        </>
-      )}
-    </button>
-
-  </div>
-</div>
-
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex items-center justify-center gap-2 px-4 sm:px-8 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 active:scale-95 disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 size={16} className="animate-spin sm:hidden" />
+                  <span className="hidden sm:inline">Saving...</span>
+                </>
+              ) : (
+                <>
+                  <Save size={16} className="sm:hidden" />
+                  <span className="hidden sm:inline">
+                    {shift?.id ? "Update Shift" : "Save Shift"}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import React, { useState, useEffect } from 'react';
 import {
     X,
@@ -174,7 +175,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
         }
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={onClose} />
 
@@ -186,8 +187,8 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                             <Clock size={24} />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-white uppercase tracking-tight">Manual Operational Log</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Admin Override → Entry for {shift.staff_name}</p>
+                            <h2 className="text-xl font-black text-white uppercase tracking-tight">Manual Service Log</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Administrative Entry → Entry for {shift.staff_name}</p>
                         </div>
                     </div>
                     <button onClick={onClose} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-all">
@@ -199,7 +200,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                     {/* Time Registry */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Clock In Interval</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Arrival Time</label>
                             <input
                                 type="datetime-local"
                                 className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
@@ -208,7 +209,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                             />
                         </div>
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Clock Out Interval</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Time</label>
                             <input
                                 type="datetime-local"
                                 className="w-full h-12 bg-slate-50 border border-slate-100 rounded-2xl px-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
@@ -225,14 +226,14 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-blue-600">
                                         <MapPin size={16} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Inbound Logistics</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Arrival Location</span>
                                     </div>
-                                    {form.clock_in_location && <span className="text-[8px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase">GPS Synchronized</span>}
+                                    {form.clock_in_location && <span className="text-[8px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase">Location Verified</span>}
                                 </div>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        placeholder="Entry point address..."
+                                        placeholder="Arrival point address..."
                                         className="flex-1 h-11 bg-white border border-slate-100 rounded-xl px-4 text-xs font-bold outline-none"
                                         value={form.clock_in_address}
                                         onChange={(e) => setForm(p => ({ ...p, clock_in_address: e.target.value }))}
@@ -242,7 +243,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                         disabled={geocoding.in}
                                         className="px-4 h-11 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all disabled:opacity-50"
                                     >
-                                        {geocoding.in ? <RefreshCw className="animate-spin" size={14} /> : 'Sync GPS'}
+                                        {geocoding.in ? <RefreshCw className="animate-spin" size={14} /> : 'Fix Location'}
                                     </button>
                                 </div>
                             </div>
@@ -251,9 +252,9 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                 <div className="flex items-center justify-between mb-2">
                                     <div className="flex items-center gap-2 text-indigo-600">
                                         <MapPin size={16} />
-                                        <span className="text-[10px] font-black uppercase tracking-widest">Outbound Logistics</span>
+                                        <span className="text-[10px] font-black uppercase tracking-widest">Departure Location</span>
                                     </div>
-                                    {form.clock_out_location && <span className="text-[8px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase">GPS Synchronized</span>}
+                                    {form.clock_out_location && <span className="text-[8px] font-black bg-emerald-100 text-emerald-600 px-2 py-0.5 rounded-full uppercase">Location Verified</span>}
                                 </div>
                                 <div className="flex gap-2">
                                     <input
@@ -268,17 +269,17 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                         disabled={geocoding.out}
                                         className="px-4 h-11 bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-700 transition-all disabled:opacity-50"
                                     >
-                                        {geocoding.out ? <RefreshCw className="animate-spin" size={14} /> : 'Sync GPS'}
+                                        {geocoding.out ? <RefreshCw className="animate-spin" size={14} /> : 'Fix Location'}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Visual Evidence Area */}
+                    {/* Photos & Proof */}
                     <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entry Proof</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Arrival Photo</label>
                             <div
                                 className={`aspect-video rounded-3xl border-2 border-dashed flex flex-col items-center justify-center relative overflow-hidden group transition-all ${form.clock_in_photo ? 'border-blue-500 bg-blue-50/10' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}
                             >
@@ -294,7 +295,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                 ) : (
                                     <>
                                         <Camera className="text-slate-300 mb-2" size={24} />
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Upload Frame</span>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase">Upload Photo</span>
                                     </>
                                 )}
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'in')} accept="image/*" />
@@ -302,7 +303,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Proof</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Departure Photo</label>
                             <div
                                 className={`aspect-video rounded-3xl border-2 border-dashed flex flex-col items-center justify-center relative overflow-hidden group transition-all ${form.clock_out_photo ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
                             >
@@ -318,7 +319,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                                 ) : (
                                     <>
                                         <Camera className="text-slate-300 mb-2" size={24} />
-                                        <span className="text-[9px] font-black text-slate-400 uppercase">Upload Frame</span>
+                                        <span className="text-[9px] font-black text-slate-400 uppercase">Upload Photo</span>
                                     </>
                                 )}
                                 <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload(e, 'out')} accept="image/*" />
@@ -341,10 +342,11 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
                         className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-200 flex items-center gap-2 active:scale-95 disabled:opacity-50"
                     >
                         {loading ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle2 size={14} />}
-                        Synchronize Operational Data
+                        Save Service Log
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
