@@ -7,7 +7,7 @@
     "contentInset": "always",
     "scrollEnabled": true,
     "limitsNavigationsToAppBoundDomains": true,
-    "backgroundColor": "#ffffff"
+    "backgroundColor": "#1976d2"
   },
   "plugins": {
     "SplashScreen": {
