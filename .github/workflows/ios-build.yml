@@ -44,14 +44,17 @@ jobs:
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
 
-          # Decode cert and key
+          # Decode files
           echo $CERTIFICATE_BASE64 | base64 --decode > $RUNNER_TEMP/cert.cer
           echo $PRIVATE_KEY_BASE64 | base64 --decode > $RUNNER_TEMP/private.key
 
-          # Combine into P12 using OpenSSL
+          # Convert Apple DER certificate to PEM format (this is the critical step)
+          openssl x509 -inform DER -in $RUNNER_TEMP/cert.cer -out $RUNNER_TEMP/cert.pem
+
+          # Combine PEM cert + private key into a P12
           openssl pkcs12 -export \
             -inkey $RUNNER_TEMP/private.key \
-            -in $RUNNER_TEMP/cert.cer \
+            -in $RUNNER_TEMP/cert.pem \
             -out $RUNNER_TEMP/cert.p12 \
             -passout pass:temp123
 
