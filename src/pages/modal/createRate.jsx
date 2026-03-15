@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { X, DollarSign, Save } from "lucide-react";
 
 export function CreateRateModal({ isOpen, onClose }) {
@@ -7,7 +8,7 @@ export function CreateRateModal({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white w-full max-w-md rounded-lg shadow-lg">
         {/* Header */}
@@ -102,6 +103,7 @@ export function CreateRateModal({ isOpen, onClose }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X, DollarSign, Save, Plus, ArrowUpRight, Check } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { toast } from "react-toastify";
@@ -100,7 +101,7 @@ export function AssignRateToStaffModal({ isOpen, onClose, staffId, staffName, on
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
         <div className="bg-slate-950 px-6 py-6 text-white relative">
@@ -227,6 +228,7 @@ export function AssignRateToStaffModal({ isOpen, onClose, staffId, staffName, on
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

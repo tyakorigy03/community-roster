@@ -342,14 +342,7 @@ function StaffProfile() {
     try {
       const response = await fetch(url);
       const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = fileName || `document_${Date.now()}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
+      await exportFile(blob, fileName || `document_${Date.now()}`);
     } catch (err) {
       console.error("Error downloading document:", err);
       showToast("Failed to download document", "error");

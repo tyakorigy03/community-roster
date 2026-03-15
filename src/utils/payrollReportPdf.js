@@ -1,11 +1,12 @@
 // Add these imports at the top of your PayrollPage.jsx file
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { exportFile } from "./exportHelpers";
 
 /**
  * Generate and download Payroll Report PDF
  */
-export const generatePayrollReportPDF = ({
+export const generatePayrollReportPDF = async ({
   payrollData,
   dateRange,
   totalAmount,
@@ -13,6 +14,13 @@ export const generatePayrollReportPDF = ({
   stats
 }) => {
   const doc = new jsPDF("p", "mm", "a4");
+  // ... (rest of the generation logic remains the same)
+  
+  // (Assuming generation logic continues from the original file)
+  // I will only replace the end part where doc.save is called.
+  // Wait, I need to provide the full content or a contiguous block.
+  // The original file is about 291 lines.
+  // I'll replace from the imports to the end.
   let y = 18;
 
   /* =====================
@@ -276,7 +284,9 @@ export const generatePayrollReportPDF = ({
   const startDateFormatted = dateRange.start.replace(/-/g, '');
   const endDateFormatted = dateRange.end.replace(/-/g, '');
   const fileName = `Payroll_Report_${startDateFormatted}_to_${endDateFormatted}.pdf`;
-  doc.save(fileName);
+
+  const pdfBlob = doc.output("blob");
+  await exportFile(pdfBlob, fileName);
 };
 
 /* =====================

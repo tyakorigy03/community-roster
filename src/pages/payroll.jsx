@@ -1,8 +1,10 @@
 import { DollarSign, Download, Calendar, AlertCircle, Clock, Users, X, FileText, ChevronLeft, ChevronRight, Menu, Filter, Search, ChevronDown, Shield, CreditCard, ArrowUpRight, TrendingUp, Plus, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
+import { exportFile } from "../utils/exportHelpers";
 import { useUser } from "../context/UserContext";
 import { generatePayrollReportPDF } from "../utils/payrollReportPdf";
 import { AssignRateToStaffModal } from "./modal/staffRate";
@@ -42,7 +44,7 @@ function DateRangeModal({ isOpen, onClose, onApply, currentPeriod, currentDates 
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300">
         <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-6 text-white relative">
@@ -125,7 +127,8 @@ function DateRangeModal({ isOpen, onClose, onApply, currentPeriod, currentDates 
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -168,7 +171,7 @@ function StaffDetailPanel({ isOpen, onClose, staff, start_date, end_date, tenant
 
   if (!isOpen || !staff) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] flex justify-end">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-lg bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
@@ -272,7 +275,8 @@ function StaffDetailPanel({ isOpen, onClose, staff, start_date, end_date, tenant
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -477,7 +481,7 @@ export default function PayrollPage() {
     });
   };
 
-  const handleExportCSV = () => {
+  const handleExportCSV = async () => {
     if (!payrollData.length) {
       toast.warning("No data to export");
       return;
@@ -514,14 +518,7 @@ export default function PayrollPage() {
       type: "text/csv;charset=utf-8;"
     });
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `payroll_summary_${dateRange.start}_to_${dateRange.end}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    await exportFile(blob, `payroll_summary_${dateRange.start}_to_${dateRange.end}.csv`);
 
     toast.success("Payroll data exported");
   };

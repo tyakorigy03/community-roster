@@ -1,10 +1,11 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { exportFile } from "./exportHelpers";
 
 /**
  * Generate and download Incident Report PDF with ALL incident fields
  */
-export const generateIncidentReportPDF = ({
+export const generateIncidentReportPDF = async ({
   incident,
   client,
   hierarchy,
@@ -370,5 +371,6 @@ export const generateIncidentReportPDF = ({
      DOWNLOAD
   ====================== */
   const fileName = `Incident_Report_${incident?.id?.substring(0, 8) || "unknown"}_${new Date().toISOString().split('T')[0]}.pdf`;
-  doc.save(fileName);
+  const pdfBlob = doc.output("blob");
+  await exportFile(pdfBlob, fileName);
 };

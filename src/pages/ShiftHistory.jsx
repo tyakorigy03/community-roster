@@ -24,6 +24,7 @@ import { useUser } from '../context/UserContext';
 import ShiftDetailsModal from '../components/ShiftDetailsModal';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { exportFile } from '../utils/exportHelpers';
 
 const ShiftHistory = () => {
     const { currentStaff } = useUser();
@@ -161,7 +162,7 @@ const ShiftHistory = () => {
         return `${hours}h ${mins}m`;
     };
 
-    const generatePDF = () => {
+    const generatePDF = async () => {
         const doc = new jsPDF();
         doc.setFillColor(15, 23, 42);
         doc.rect(0, 0, 210, 35, 'F');
@@ -200,7 +201,8 @@ const ShiftHistory = () => {
             }
         });
 
-        doc.save(`Archive_Export_${new Date().getTime()}.pdf`);
+        const pdfBlob = doc.output("blob");
+        await exportFile(pdfBlob, `Archive_Export_${new Date().getTime()}.pdf`);
         toast.success('Forensic Report Generated');
     };
 

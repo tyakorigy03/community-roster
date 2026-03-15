@@ -31,6 +31,7 @@ import { toast } from 'react-toastify';
 import { useUser } from '../context/UserContext';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { exportFile } from '../utils/exportHelpers';
 
 // Helper functions
 const formatDate = (dateString) => {
@@ -547,7 +548,8 @@ export default function ProgressNotesList() {
         }
       });
 
-      doc.save(`Progress_Notes_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+      const pdfBlob = doc.output("blob");
+      await exportFile(pdfBlob, `Progress_Notes_Report_${new Date().toISOString().split('T')[0]}.pdf`);
       toast.success('Report exported successfully');
     } catch (error) {
       console.error('Error exporting PDF:', error);

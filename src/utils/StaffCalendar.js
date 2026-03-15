@@ -1,10 +1,11 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { exportFile } from "./exportHelpers";
 
 /**
  * Generate and download Schedule PDF
  */
-export const generateSchedulePDF = ({
+export const generateSchedulePDF = async ({
   staffName,
   selectedDate,
   selectedDateShifts,
@@ -242,10 +243,9 @@ export const generateSchedulePDF = ({
   /* =====================
      DOWNLOAD
   ====================== */
-  doc.save(
-    `Schedule_${staffName?.replace(/\s+/g, "_")}_${currentMonth.getMonth() + 1
-    }_${currentMonth.getFullYear()}.pdf`
-  );
+  const fileName = `Schedule_${staffName?.replace(/\s+/g, "_")}_${currentMonth.getMonth() + 1}_${currentMonth.getFullYear()}.pdf`;
+  const pdfBlob = doc.output("blob");
+  await exportFile(pdfBlob, fileName);
 };
 
 /* =====================

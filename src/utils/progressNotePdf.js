@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
+import { exportFile } from "./exportHelpers";
 
-export const generateProgressNotePDF = (note, attachments = []) => {
+export const generateProgressNotePDF = async (note, attachments = []) => {
   const doc = new jsPDF("p", "mm", "a4");
   let y = 20;
 
@@ -150,5 +151,6 @@ export const generateProgressNotePDF = (note, attachments = []) => {
   /* =====================
      DOWNLOAD
   ====================== */
-  doc.save(`progress-note-${note.id}.pdf`);
+  const pdfBlob = doc.output("blob");
+  await exportFile(pdfBlob, `progress-note-${note.id}.pdf`);
 };
