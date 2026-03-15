@@ -26,7 +26,11 @@ jobs:
         run: npm run build
 
       - name: Add iOS platform
-        run: npx cap add ios
+        run: |
+          npx cap add ios
+          echo "--- Checking ios folder ---"
+          ls -la ios/ || echo "ios folder does not exist!"
+          ls -la ios/App/ || echo "ios/App folder does not exist!"
 
       - name: Sync Capacitor
         run: npx cap sync ios
@@ -43,27 +47,17 @@ jobs:
           PRIVATE_KEY_BASE64: ${{ secrets.PRIVATE_KEY_BASE64 }}
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-
-          # Decode files
           echo $CERTIFICATE_BASE64 | base64 --decode > $RUNNER_TEMP/cert.cer
           echo $PRIVATE_KEY_BASE64 | base64 --decode > $RUNNER_TEMP/private.key
-
-          # Convert Apple DER certificate to PEM format (this is the critical step)
           openssl x509 -inform DER -in $RUNNER_TEMP/cert.cer -out $RUNNER_TEMP/cert.pem
-
-          # Combine PEM cert + private key into a P12
           openssl pkcs12 -export \
             -inkey $RUNNER_TEMP/private.key \
             -in $RUNNER_TEMP/cert.pem \
             -out $RUNNER_TEMP/cert.p12 \
             -passout pass:temp123
-
-          # Create and configure keychain
           security create-keychain -p "temp123" $KEYCHAIN_PATH
           security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
           security unlock-keychain -p "temp123" $KEYCHAIN_PATH
-
-          # Import P12 into keychain
           security import $RUNNER_TEMP/cert.p12 -k $KEYCHAIN_PATH -P "temp123" -T /usr/bin/codesign
           security list-keychain -d user -s $KEYCHAIN_PATH
           security set-key-partition-list -S apple-tool:,apple: -s -k "temp123" $KEYCHAIN_PATH
