@@ -148,7 +148,7 @@ export default function Privacy() {
               </p>
               <div className="mt-3 bg-slate-50 rounded-xl p-4 text-sm font-medium text-slate-700">
                 <p><strong>Blessing Community</strong></p>
-                <p>Email: admin@blessingcommunity.com.au</p>
+                <p>Email: bonnynsabigaba@gmail.com</p>
                 <p>Country: Australia</p>
               </div>
             </section>
