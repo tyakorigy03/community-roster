@@ -124,7 +124,7 @@ function Layout({ children }) {
   return (
     <div className="flex flex-col h-screen bg-blue-600 overflow-hidden font-sans">
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-3 lg:px-5 pr-5 md:pr-2 py-2 text-white z-50 w-full">
+      <nav className="flex justify-between items-center px-3 lg:px-5 pt-5 md:pt-2 py-2 text-white z-50 w-full">
         <div className="flex items-center gap-3 min-w-0">
           <a className="flex items-center gap-2 group flex-shrink-0" href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
             <div className="bg-white p-1 rounded-lg group-hover:bg-white/90 transition-all flex-shrink-0 shadow-md ring-1 ring-white/20">
