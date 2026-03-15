@@ -7,6 +7,7 @@
   --color-glass-white: rgba(255, 255, 255, 0.08);
   --color-glass-border: rgba(255, 255, 255, 0.12);
 }
+
 :root {
   --safe-area-top: env(safe-area-inset-top);
   --safe-area-bottom: env(safe-area-inset-bottom);
@@ -15,8 +16,8 @@
 body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+  /* overscroll-behavior: none; */
+  /* -webkit-overflow-scrolling: touch; */
 }
 
 html,
