@@ -37,6 +37,21 @@ jobs:
           sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = MJW2ZG6ZLH/g' ios/App/App.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = ;/DEVELOPMENT_TEAM = MJW2ZG6ZLH;/g' ios/App/App.xcodeproj/project.pbxproj
 
+      - name: Generate app icon from logo
+        run: |
+          # Install imagemagick for resizing
+          brew install imagemagick
+
+          # Resize logo to 1024x1024 and save as the capacitor assets icon
+          mkdir -p assets
+          magick public/logo.png -resize 1024x1024! -background white -flatten assets/icon.png
+
+          echo "Icon generated:"
+          identify assets/icon.png
+
+          # Generate all iOS icon sizes using capacitor assets
+          npx @capacitor/assets generate --ios
+
       - name: Import code signing certificate
         env:
           CERTIFICATE_BASE64: ${{ secrets.CERTIFICATE_BASE64 }}

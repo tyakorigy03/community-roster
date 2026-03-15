@@ -2,5 +2,16 @@
   "appId": "com.blessingcommunity.app",
   "appName": "Blessing Community",
   "webDir": "dist",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "ios": {
+    "contentInset": "always",
+    "scrollEnabled": true,
+    "limitsNavigationsToAppBoundDomains": true,
+    "backgroundColor": "#ffffff"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true
+    }
+  }
 }
