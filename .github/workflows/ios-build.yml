@@ -112,10 +112,10 @@ jobs:
           P8_KEY_ID: ${{ secrets.P8_KEY_ID }}
           P8_ISSUER_ID: ${{ secrets.P8_ISSUER_ID }}
         run: |
-          echo "$P8_KEY" > $RUNNER_TEMP/auth.p8
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo "$P8_KEY" > ~/.appstoreconnect/private_keys/AuthKey_${P8_KEY_ID}.p8
           xcrun altool --upload-app \
             --type ios \
             --file $RUNNER_TEMP/export/App.ipa \
             --apiKey $P8_KEY_ID \
-            --apiIssuer $P8_ISSUER_ID \
-            --apiPrivateKey $RUNNER_TEMP/auth.p8
+            --apiIssuer $P8_ISSUER_ID
