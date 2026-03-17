@@ -16,8 +16,8 @@
 body {
   padding-top: env(safe-area-inset-top);
   padding-bottom: env(safe-area-inset-bottom);
-  overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
+  /* overscroll-behavior: none; */
+  /* -webkit-overflow-scrolling: touch; */
 }
 
 html,

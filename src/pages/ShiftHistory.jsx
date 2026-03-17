@@ -148,7 +148,7 @@ const ShiftHistory = () => {
             setTotalItems(count || 0);
         } catch (error) {
             console.error('Fetch err:', error);
-            toast.error('Log Synchronization Failed');
+            toast.error('Failed to sync history');
         } finally {
             setLoading(false);
         }
@@ -168,7 +168,7 @@ const ShiftHistory = () => {
         doc.rect(0, 0, 210, 35, 'F');
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(18);
-        doc.text('OPERATIONAL ARCHIVE REPORT', 15, 20);
+        doc.text('SHIFT HISTORY REPORT', 15, 20);
         doc.setFontSize(9);
         doc.text(`Generated: ${new Date().toLocaleString()}`, 145, 20);
 
@@ -202,8 +202,8 @@ const ShiftHistory = () => {
         });
 
         const pdfBlob = doc.output("blob");
-        await exportFile(pdfBlob, `Archive_Export_${new Date().getTime()}.pdf`);
-        toast.success('Forensic Report Generated');
+        await exportFile(pdfBlob, `Shift_History_${new Date().getTime()}.pdf`);
+        toast.success('Report Generated');
     };
 
     const handleFilterChange = (k, v) => {
@@ -213,8 +213,8 @@ const ShiftHistory = () => {
 
     const CompactBadge = ({ status, approved }) => {
         const base = "px-2 py-0.5 rounded-full border text-[8px] font-black uppercase tracking-widest";
-        if (approved) return <span className={`${base} bg-emerald-50 text-emerald-600 border-emerald-100`}>[A] Approved</span>;
-        if (status === 'completed') return <span className={`${base} bg-blue-50 text-blue-600 border-blue-100`}>[C] Completed</span>;
+        if (approved) return <span className={`${base} bg-emerald-50 text-emerald-600 border-emerald-100`}>Approved</span>;
+        if (status === 'completed') return <span className={`${base} bg-blue-50 text-blue-600 border-blue-100`}>Completed</span>;
         return <span className={`${base} bg-slate-50 text-slate-400 border-slate-100`}>{status}</span>;
     };
 
@@ -223,12 +223,12 @@ const ShiftHistory = () => {
             {/* Header Strategy */}
             <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b-2 border-slate-100 p-4 lg:px-8 lg:py-4 flex flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-xl shadow-slate-200">
-                        <HardDrive size={20} />
+                    <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600">
+                        <Calendar size={20} />
                     </div>
                     <div>
-                        <h1 className="text-base lg:text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Operational Archive</h1>
-                        <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Forensic Logs → Past Deployments</p>
+                        <h1 className="text-base lg:text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Shift History</h1>
+                        <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5">Shift Records → Past Shifts</p>
                     </div>
                 </div>
 
@@ -237,7 +237,7 @@ const ShiftHistory = () => {
                         onClick={() => setShowFilters(!showFilters)}
                         className={`px-3 py-2 rounded-xl border transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest ${showFilters ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-400 hover:text-slate-600'}`}
                     >
-                        <Filter size={14} /> <span className="hidden md:inline">Parameters</span>
+                        <Filter size={14} /> <span className="hidden md:inline">Filters</span>
                     </button>
                     <button
                         onClick={generatePDF}
@@ -255,47 +255,47 @@ const ShiftHistory = () => {
             </div>
 
             <div className="max-w-[1700px] mx-auto p-4 lg:p-8">
-                {/* Advanced Query Console */}
+                {/* Advanced Filters */}
                 {showFilters && (
                     <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-5 mb-8 animate-in slide-in-from-top-4 duration-300">
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Note Fragment</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Search Notes</label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                                     <input
                                         type="text"
-                                        placeholder="Search logs..."
-                                        className="w-full h-10 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/20 transition-all"
+                                        placeholder="Keywords..."
+                                        className="w-full h-10 bg-slate-50 border border-slate-100 rounded-xl pl-9 pr-4 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500/10 transition-all"
                                         value={filters.search}
                                         onChange={(e) => handleFilterChange('search', e.target.value)}
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Client Pipeline</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Client</label>
                                 <select
                                     className="w-full h-10 bg-slate-50 border border-slate-100 rounded-xl px-3 text-xs font-bold outline-none cursor-pointer"
                                     value={filters.clientId}
                                     onChange={(e) => handleFilterChange('clientId', e.target.value)}
                                 >
-                                    <option value="all">Global (All Clients)</option>
+                                    <option value="all">All Clients</option>
                                     {clients.map(c => <option key={c.id} value={c.id}>{c.first_name} {c.last_name}</option>)}
                                 </select>
                             </div>
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Operator Profile</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Staff</label>
                                 <select
                                     className="w-full h-10 bg-slate-50 border border-slate-100 rounded-xl px-3 text-xs font-bold outline-none cursor-pointer"
                                     value={filters.staffId}
                                     onChange={(e) => handleFilterChange('staffId', e.target.value)}
                                 >
-                                    <option value="all">Global (All Staff)</option>
+                                    <option value="all">All Staff</option>
                                     {staffList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                 </select>
                             </div>
                             <div className="lg:col-span-2 space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Temporal Range</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Date Range</label>
                                 <div className="grid grid-cols-2 gap-2">
                                     <input type="date" value={filters.startDate} onChange={(e) => handleFilterChange('startDate', e.target.value)} className="h-10 bg-slate-50 border border-slate-100 rounded-xl px-3 text-[10px] font-bold outline-none" />
                                     <input type="date" value={filters.endDate} onChange={(e) => handleFilterChange('endDate', e.target.value)} className="h-10 bg-slate-50 border border-slate-100 rounded-xl px-3 text-[10px] font-bold outline-none" />
@@ -305,31 +305,31 @@ const ShiftHistory = () => {
                     </div>
                 )}
 
-                {/* Hybrid Intelligence UI */}
-                <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px]">
+                {/* Main Content Area */}
+                <div className="bg-white rounded-2xl lg:rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden min-h-[400px] flex flex-col">
                     {loading ? (
-                        <div className="flex flex-col items-center justify-center h-[400px]">
+                        <div className="flex flex-col items-center justify-center flex-grow py-20">
                             <RefreshCw className="text-blue-500 animate-spin mb-4" size={32} />
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Querying Database...</p>
                         </div>
                     ) : shifts.length > 0 ? (
-                        <>
-                            {/* Desktop Forensic Table */}
+                        <div className="flex flex-col flex-grow">
+                            {/* Desktop Table View */}
                             <div className="hidden lg:block overflow-x-auto">
                                 <table className="w-full">
                                     <thead>
                                         <tr className="bg-slate-50/50 border-b border-slate-100">
-                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Temporal Log</th>
-                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Subject/Client</th>
-                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Active Operator</th>
+                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date & Time</th>
+                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                                            <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Staff</th>
                                             <th className="text-left p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Duration</th>
-                                            <th className="text-center p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Sync Status</th>
+                                            <th className="text-center p-4 text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
                                             <th className="p-4"></th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-50">
                                         {shifts.map((s) => (
-                                            <tr key={s.id} className="hover:bg-slate-50/80 even:bg-slate-50/40 transition-all cursor-pointer group" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
+                                            <tr key={s.id} className="hover:bg-blue-50/30 even:bg-slate-50/50 transition-all cursor-pointer group" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
                                                 <td className="p-4">
                                                     <div className="font-black text-slate-900 text-[11px] leading-tight">{s.shift_date}</div>
                                                     <div className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{s.start_time || '--:--'} - {s.end_time || '--:--'}</div>
@@ -361,34 +361,46 @@ const ShiftHistory = () => {
                                 </table>
                             </div>
 
-                            {/* Mobile Tactical Grid */}
-                            <div className="lg:hidden divide-y divide-slate-50">
-                                {shifts.map((s) => (
-                                    <div key={s.id} className="p-5 active:bg-slate-50 even:bg-slate-50/30 transition-colors" onClick={() => { setSelectedShift(s); setShowModal(true); }}>
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div>
-                                                <div className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-1">{s.shift_date}</div>
-                                                <h3 className="font-black text-slate-900 text-sm uppercase leading-tight">{s.client_name}</h3>
-                                            </div>
-                                            <div className="flex items-center gap-2">
-                                                <CompactBadge status={s.execution_status} approved={s.approved} />
-                                                <ChevronRight size={16} className="text-slate-300" />
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center justify-between mt-4 p-3 bg-slate-50 rounded-2xl border border-slate-100">
-                                            <div className="flex items-center gap-2 text-[10px] font-black text-slate-600">
-                                                <User size={12} className="text-indigo-500" /> {s.staff_name.split(' ')[0]}
-                                            </div>
-                                            <div className="flex items-center gap-2 text-[10px] font-black text-blue-600">
-                                                <Clock size={12} /> {s.duration}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                            {/* Mobile Simple Table View */}
+                            <div className="lg:hidden overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-slate-50/50 border-b border-slate-100">
+                                            <th className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Date</th>
+                                            <th className="p-3 text-[9px] font-black text-slate-400 uppercase tracking-widest">Client</th>
+                                            <th className="p-3 text-center text-[9px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                            <th className="p-3 w-6"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-slate-50">
+                                        {shifts.map((s) => (
+                                            <tr 
+                                                key={s.id} 
+                                                className="even:bg-slate-50/50 active:bg-slate-100 transition-colors cursor-pointer" 
+                                                onClick={() => { setSelectedShift(s); setShowModal(true); }}
+                                            >
+                                                <td className="p-3 whitespace-nowrap">
+                                                    <div className="text-[10px] font-black text-slate-900">{s.shift_date.split('-').slice(1).join('/')}</div>
+                                                    <div className="text-[8px] font-bold text-slate-400 uppercase">{s.start_time}</div>
+                                                </td>
+                                                <td className="p-3">
+                                                    <div className="text-[11px] font-black text-slate-800 uppercase truncate max-w-[100px]">{s.client_name}</div>
+                                                    <div className="text-[8px] font-bold text-slate-400 uppercase truncate">{s.staff_name.split(' ')[0]}</div>
+                                                </td>
+                                                <td className="p-3 text-center">
+                                                    <CompactBadge status={s.execution_status} approved={s.approved} />
+                                                </td>
+                                                <td className="p-3 text-right">
+                                                    <ChevronRight size={12} className="text-slate-300" />
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
                             </div>
 
-                            {/* Tactical Pagination */}
-                            <div className="p-4 lg:p-6 bg-slate-50/50 border-t border-slate-100 flex flex-row items-center justify-between">
+                            {/* Pagination */}
+                            <div className="mt-auto p-4 lg:p-6 bg-slate-50/50 border-t border-slate-100 flex flex-row items-center justify-between">
                                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Entries: <span className="text-slate-900">{totalItems}</span></p>
                                 <div className="flex items-center gap-2">
                                     <button
@@ -408,14 +420,14 @@ const ShiftHistory = () => {
                                     </button>
                                 </div>
                             </div>
-                        </>
+                        </div>
                     ) : (
-                        <div className="flex flex-col items-center justify-center h-[400px] p-8 text-center">
-                            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                                <Search className="text-slate-200" size={32} />
+                         <div className="flex flex-col items-center justify-center flex-grow py-20 p-8 text-center">
+                            <div className="w-16 h-16 bg-slate-50 rounded-3xl flex items-center justify-center mb-6">
+                                <Search className="text-slate-300" size={32} />
                             </div>
-                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">Log Sector Empty</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 max-w-[200px]">No historical data found for current parameters.</p>
+                            <h2 className="text-sm font-black text-slate-900 uppercase tracking-tight">No Records Found</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2 max-w-[200px]">We couldn't find any historical data for these parameters.</p>
                         </div>
                     )}
                 </div>
@@ -442,11 +454,11 @@ const ShiftHistory = () => {
                             .eq('tenant_id', currentStaff.tenant_id);
                             
                         if (error) throw error;
-                        toast.success('Shift Tactical Approval Secured');
+                        toast.success('Shift Approved');
                         fetchShifts();
                     } catch (err) {
                         console.error('Approval fail:', err);
-                        toast.error('Approval Authorization Failure');
+                        toast.error('Failed to approve shift');
                     }
                 }}
             />
