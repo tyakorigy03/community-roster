@@ -5,7 +5,7 @@ import { ArrowLeft, Shield } from "lucide-react";
 export default function Privacy() {
   return (
     <div className="min-h-dvh bg-slate-50 font-sans">
-      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <nav className="bg-white border-b border-slate-200 sticky top-0 z-50 pt-safe">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">
             <Link to="/login" className="flex items-center gap-2 text-slate-500 hover:text-emerald-600 transition-colors font-semibold text-sm">

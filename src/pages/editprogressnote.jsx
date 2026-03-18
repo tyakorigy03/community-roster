@@ -397,7 +397,7 @@ function EditProgressNote() {
   return (
     <div className="min-h-dvh bg-slate-50 animate-in fade-in duration-500">
       {/* Compact Header */}
-      <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
+      <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 pt-safe border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate(-1)}

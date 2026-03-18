@@ -607,7 +607,7 @@ function EditIncident() {
   }
 
   return (
-    <div className="min-h-dvh bg-slate-50 md:p-8">
+    <div className="min-h-dvh bg-slate-50 md:p-8 pt-safe pb-safe">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Tactical Header */}
         <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">

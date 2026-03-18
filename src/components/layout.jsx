@@ -124,7 +124,7 @@ function Layout({ children }) {
   return (
     <div className="flex flex-col h-[100dvh] bg-blue-600 overflow-hidden font-sans">
       {/* Navbar */}
-      <nav className="flex justify-between items-center px-3  pt-2 py-2 text-white z-50 w-full">
+      <nav className="flex justify-between items-center px-3 pt-safe py-2 text-white z-50 w-full">
         <div className="flex items-center gap-3 min-w-0">
           <a className="flex items-center gap-2 group flex-shrink-0" href="/" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
             <div className="bg-white p-1 rounded-lg group-hover:bg-white/90 transition-all flex-shrink-0 shadow-md ring-1 ring-white/20">
@@ -226,7 +226,7 @@ function Layout({ children }) {
       </main>
 
       {/* Bottom Navigation - Hidden on md+ unless needed */}
-      <div className="bg-white  border-t border-slate-100 shadow-[0_-2px_16px_rgba(0,0,0,0.08)]     md:hidden" style={{ paddingBottom: 'max(0.25rem, env(safe-area-inset-bottom))' }}>
+      <div className="bg-white border-t border-slate-100 shadow-[0_-2px_16px_rgba(0,0,0,0.08)] md:hidden pb-safe">
         <div className="flex justify-around items-center px-1 pt-1 pb-1">
           {mobilePrimaryNav.map((item) => {
             const isActive = activeNavItem === item.path;

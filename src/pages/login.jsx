@@ -64,7 +64,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-dvh flex items-center justify-center relative overflow-hidden font-sans selection:bg-blue-200 bg-slate-50">
+    <div className="min-h-dvh pt-safe pb-safe flex items-center justify-center relative overflow-hidden font-sans selection:bg-blue-200 bg-slate-50">
       
       {/* Dynamic Background Elements - Using Brand Blue (#2563eb / blue-600) */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
