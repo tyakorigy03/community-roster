@@ -4,7 +4,7 @@ import { ArrowLeft, FileText } from "lucide-react";
 
 export default function Terms() {
   return (
-    <div className="min-h-screen bg-slate-50 font-sans">
+    <div className="min-h-dvh bg-slate-50 font-sans">
       <nav className="bg-white border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center h-16">

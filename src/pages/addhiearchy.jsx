@@ -99,7 +99,7 @@ const fetchHierarchies = async () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100 md:p-4">
+    <div className="min-h-dvh flex items-center justify-center bg-slate-100 md:p-4">
       <div className="w-full max-w-4xl md:rounded-xl md:shadow border border-gray-300 bg-white p-8">
         <div className="header flex flex-col sm:flex-row justify-between items-start sm:items-center px-3 py-1 border-b mb-6 border-gray-400 gap-4">
           <Link to={'/hierarchy'} className="flex items-center hover:text-blue-600 transition-colors">

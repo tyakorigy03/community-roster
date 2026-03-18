@@ -36,9 +36,9 @@ function ShiftModal({ visible, shift, onClose, onSave, onDelete }) {
   if (!visible) return null;
 
   return createPortal(
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center sm:p-4 p-0 z-50">
+      <div className="bg-white sm:rounded-xl rounded-none shadow-2xl w-full sm:max-w-md h-dvh sm:h-auto flex flex-col">
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-100">
           <h2 className="text-xl font-bold text-gray-800">
             {shift?.id ? 'Edit Shift' : 'Add Shift'}
           </h2>
@@ -50,7 +50,7 @@ function ShiftModal({ visible, shift, onClose, onSave, onDelete }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 space-y-4 flex-1 overflow-y-auto">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Role

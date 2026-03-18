@@ -179,7 +179,7 @@ export default function ManualLogModal({ visible, shift, onClose, onSave }) {
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={onClose} />
 
-            <div className="relative w-full max-w-2xl max-h-[90vh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+            <div className="relative w-full max-w-2xl max-h-[90dvh] flex flex-col bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in duration-300">
                 {/* Tactical Header */}
                 <div className="bg-slate-900 p-6 flex items-center justify-between border-b border-slate-700 shrink-0">
                     <div className="flex items-center gap-4">

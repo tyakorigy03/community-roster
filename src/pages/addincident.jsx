@@ -586,14 +586,14 @@ function AddIncident() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+      <div className="min-h-dvh flex items-center justify-center bg-slate-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 animate-in fade-in duration-500">
+    <div className="min-h-dvh bg-slate-50 animate-in fade-in duration-500">
       {/* Compact Header */}
       <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-3 min-w-0">

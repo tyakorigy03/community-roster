@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+ import React, { useState } from "react";
 import { createPortal } from "react-dom";
 import { X, Clock, Info, MapPin, Camera, Check, ExternalLink } from "lucide-react";
 import { supabase } from "../../lib/supabase";
@@ -52,7 +52,7 @@ export function ShiftApprovalModal({ isOpen, onClose, shift, onApprove }) {
 
   return createPortal(
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90dvh] overflow-hidden border border-slate-200 animate-in zoom-in-95 duration-200 flex flex-col">
         {/* Header */}
         <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">

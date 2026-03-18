@@ -25,7 +25,7 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-200">
+    <div className="min-h-dvh bg-slate-50 text-slate-900 font-sans selection:bg-blue-200">
       {/* Premium Header - White/Blue Theme */}
       <nav className="bg-blue-600 sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

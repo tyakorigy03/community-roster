@@ -152,7 +152,7 @@ export default function PayRateManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-dvh bg-white">
       {/* Professional Compact Header */}
    <div className="bg-gradient-to-r from-blue-950 via-slate-950 to-blue-950 px-3 sm:px-4 lg:px-8 py-2 sm:py-3 sticky top-0 z-40 shadow-xl border-b border-white/10 backdrop-blur-md">
   <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4 min-w-0">
@@ -624,7 +624,7 @@ function CreateRateModal({ isOpen, onClose, onSuccess, rateToEdit }) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90dvh]">
         <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-6 text-white relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
           <div className="relative flex items-center justify-between">
@@ -894,7 +894,7 @@ function AssignRateToStaffModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90dvh]">
         <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-6 text-white relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
           <div className="relative flex items-center justify-between">
@@ -1118,7 +1118,7 @@ function EditStaffRateModal({ isOpen, onClose, onSuccess, assignment }) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 animate-in zoom-in-95 duration-300 flex flex-col max-h-[90dvh]">
         <div className="bg-gradient-to-r from-blue-900 to-indigo-900 px-6 py-6 text-white relative">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16"></div>
           <div className="relative flex items-center justify-between">

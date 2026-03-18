@@ -600,14 +600,14 @@ function EditIncident() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-100">
+      <div className="min-h-dvh flex items-center justify-center bg-slate-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 md:p-8">
+    <div className="min-h-dvh bg-slate-50 md:p-8">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Tactical Header */}
         <div className="bg-slate-900 rounded-[2.5rem] p-8 text-white relative overflow-hidden shadow-2xl">

@@ -219,7 +219,7 @@ const ShiftHistory = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50/50">
+        <div className="min-h-dvh bg-slate-50/50">
             {/* Header Strategy */}
             <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b-2 border-slate-100 p-4 lg:px-8 lg:py-4 flex flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">

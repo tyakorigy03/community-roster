@@ -561,7 +561,7 @@ export default function ProgressNotesList() {
 
   if (loading && notes.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Syncing Environment...</div>
@@ -571,7 +571,7 @@ export default function ProgressNotesList() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-dvh bg-white">
       {/* Professional Compact Header */}
       <div className="flex flex-row justify-between items-center gap-3 p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20 min-w-0">
 

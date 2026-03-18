@@ -198,7 +198,7 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-white">
+      <div className="flex flex-col items-center justify-center min-h-dvh bg-white">
         <div className="animate-spin rounded-full h-10 w-10 border-4 border-slate-100 border-t-blue-600 mb-4"></div>
         <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Loading Configurations...</p>
       </div>
@@ -206,7 +206,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/30">
+    <div className="min-h-dvh bg-slate-50/30">
       {/* Professional Compact Header */}
    <div className="flex flex-row justify-between items-center gap-3 p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20 min-w-0">
 

@@ -288,7 +288,7 @@ function EmailModal({
 
   return (
     <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-slate-100">
+      <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[90dvh] overflow-hidden flex flex-col border border-slate-100">
         {/* Header */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 backdrop-blur-md">
           <div className="flex items-center gap-4">
@@ -601,7 +601,7 @@ export default function ProgressNoteDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING PROGRESS NOTE...</div>
@@ -612,7 +612,7 @@ export default function ProgressNoteDetail() {
 
   if (!note) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md bg-white border border-slate-100 rounded-[2rem] p-10 shadow-xl">
           <div className="w-16 h-16 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="text-red-600" size={32} />
@@ -636,7 +636,7 @@ export default function ProgressNoteDetail() {
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="min-h-screen bg-slate-50 animate-in fade-in duration-500">
+    <div className="min-h-dvh bg-slate-50 animate-in fade-in duration-500">
       {/* Compact Header */}
       <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-3 min-w-0">

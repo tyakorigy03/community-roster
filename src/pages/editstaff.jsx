@@ -543,7 +543,7 @@ function EditStaff() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">
@@ -555,7 +555,7 @@ function EditStaff() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-0 animate-in fade-in duration-500">
+    <div className="min-h-dvh bg-slate-50 p-0 animate-in fade-in duration-500">
 
       {/* ==================== HEADER ==================== */}
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center p-4 lg:px-6 lg:py-4 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">

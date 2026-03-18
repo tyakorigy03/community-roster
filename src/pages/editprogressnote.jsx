@@ -360,7 +360,7 @@ function EditProgressNote() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
           <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">Loading Note Editor...</div>
@@ -371,7 +371,7 @@ function EditProgressNote() {
 
   if (!progressNote) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-slate-50 flex items-center justify-center p-4">
         <div className="text-center max-w-md bg-white border border-slate-100 rounded-[2rem] p-10 shadow-xl">
           <div className="w-16 h-16 bg-red-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="text-red-600" size={32} />
@@ -395,7 +395,7 @@ function EditProgressNote() {
   const canEdit = isAdmin || isAuthor;
 
   return (
-    <div className="min-h-screen bg-slate-50 animate-in fade-in duration-500">
+    <div className="min-h-dvh bg-slate-50 animate-in fade-in duration-500">
       {/* Compact Header */}
       <div className="flex gap-3 flex-row justify-between items-center p-4 lg:px-6 lg:py-3 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">
         <div className="flex items-center gap-3 min-w-0">

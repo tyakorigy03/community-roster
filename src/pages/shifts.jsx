@@ -6,15 +6,11 @@ import {
   Trash2,
   Send,
   Calendar,
-  Clock,
-  ChevronDown,
-  ChevronUp,
   AlertCircle,
   Copy,
   Users as UsersIcon,
   User as UserIcon,
   Sparkles,
-  Trash,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';

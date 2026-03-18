@@ -95,7 +95,7 @@ export default function ShiftDetailsModal({
     const statusObj = getStatusConfig(getShiftStatus(shift));
 
     return createPortal(
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-2 sm:p-6 overflow-hidden">
+        <div className="fixed inset-0 z-[1000] flex items-center justify-center p-0 sm:p-6 overflow-hidden">
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"
@@ -103,7 +103,7 @@ export default function ShiftDetailsModal({
             />
 
             {/* Modal Card */}
-            <div className={`relative w-full max-h-[80vh] flex flex-col ${(shift.clock_in_photo_url || shift.clock_out_photo_url || shift.clock_in_location || shift.clock_out_location) ? 'max-w-4xl' : 'max-w-xl'} bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300`}>
+            <div className={`relative w-full h-full md:h-auto  md:max-h-[80dvh] flex flex-col ${(shift.clock_in_photo_url || shift.clock_out_photo_url || shift.clock_in_location || shift.clock_out_location) ? 'max-w-4xl' : 'max-w-xl'} bg-white md:rounded-3xl rounded-none md:shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300`}>
                 {/* Header - Tactical Design */}
                 <div className="relative p-4 sm:p-6 bg-slate-900 border-b border-slate-700 shrink-0">
                     <button

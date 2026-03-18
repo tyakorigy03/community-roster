@@ -447,7 +447,7 @@ export default function ProfessionalIncidentView() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="text-gray-600 font-medium">Loading incident report...</p>
@@ -458,7 +458,7 @@ export default function ProfessionalIncidentView() {
 
   if (!incident) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Incident Not Found</h2>
@@ -477,7 +477,7 @@ export default function ProfessionalIncidentView() {
   const severity = getSeverityBadge(incident.incident_rating);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-dvh bg-gray-50">
       {/* Header Bar */}
       <div className="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-xl shadow-slate-900/10">
         <div className="max-w-6xl mx-auto px-6 py-3">
@@ -1028,7 +1028,7 @@ export default function ProfessionalIncidentView() {
       {/* Email Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl rounded-[3rem] border border-slate-100 overflow-hidden">
+          <div className="bg-white w-full max-w-4xl max-h-[90dvh] flex flex-col shadow-2xl rounded-[3rem] border border-slate-100 overflow-hidden">
             {/* Header */}
             <div className="bg-slate-900 text-white p-8 flex justify-between items-center relative overflow-hidden">
               <div className="absolute top-0 right-0 h-full w-64 bg-gradient-to-l from-white/5 to-transparent"></div>

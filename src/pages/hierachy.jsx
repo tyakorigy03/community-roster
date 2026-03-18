@@ -374,14 +374,14 @@ function HierarchyPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-dvh">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 min-h-screen bg-gray-50">
+    <div className="p-6 min-h-dvh bg-gray-50">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b border-gray-300 pb-4 gap-4">
         <div>
@@ -639,7 +639,7 @@ function HierarchyPage() {
       {/* Hierarchy Info Modal */}
       {selectedHierarchy && showInfoModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90dvh] overflow-hidden">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <div className="flex items-center gap-4">
                 <FolderTree className="text-blue-500 w-8 h-8" />
@@ -659,7 +659,7 @@ function HierarchyPage() {
               </button>
             </div>
 
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+            <div className="p-6 overflow-y-auto max-h-[calc(90dvh-200px)]">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
                   <div>

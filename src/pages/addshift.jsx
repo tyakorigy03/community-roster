@@ -174,7 +174,7 @@ export default function ShiftModal({ visible, shift, onClose, onSave, onDelete, 
     <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 overflow-hidden">
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
 
-      <div className="relative w-full max-w-lg bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh] animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-lg bg-white md:rounded-[2rem] md:shadow-2xl overflow-hidden flex flex-col max-h-[95dvh] animate-in fade-in zoom-in duration-300">
         {/* Header */}
         <div className="p-6 bg-white border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">

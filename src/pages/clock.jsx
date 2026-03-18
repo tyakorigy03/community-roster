@@ -378,7 +378,7 @@ export default function ClockInOutPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center">
+      <div className="min-h-dvh bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-blue-600 animate-spin mx-auto mb-4" />
           <p className="text-gray-600">Loading shift information...</p>
@@ -389,7 +389,7 @@ export default function ClockInOutPage() {
 
   if (error && !shift) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center p-4">
+      <div className="min-h-dvh bg-gradient-to-b from-blue-50 to-gray-100 flex items-center justify-center p-4">
         <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 p-6 text-center">
           <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-800 mb-2">Shift Not Found</h2>
@@ -406,7 +406,7 @@ export default function ClockInOutPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-gray-100 p-4">
+    <div className="min-h-dvh bg-gradient-to-b from-blue-50 to-gray-100 p-4">
       <div className="max-w-md mx-auto">
         {/* Header */}
         <div className="bg-white rounded-t-3xl border-b border-gray-200 px-4 py-6 mb-6 shadow-sm">

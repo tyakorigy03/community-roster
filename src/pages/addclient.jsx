@@ -245,7 +245,7 @@ function AddClient() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-0 animate-in fade-in duration-500">
+    <div className="min-h-dvh bg-slate-50 p-0 animate-in fade-in duration-500">
       
       {/* ==================== HEADER ==================== */}
       <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center p-4 lg:px-6 lg:py-4 border-b-2 border-slate-100 bg-white/50 backdrop-blur-sm sticky top-0 z-20">

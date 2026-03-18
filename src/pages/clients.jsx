@@ -25,45 +25,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "react-toastify";
 import { useUser } from "../context/UserContext";
-function AttachmentItem({ attachment }) {
-  const getFileIcon = (type) => {
-    if (type?.includes('pdf')) return '📄';
-    if (type?.startsWith('image/')) return '🖼️';
-    if (type?.includes('word') || type?.includes('document')) return '📝';
-    if (type?.includes('spreadsheet') || type?.includes('excel')) return '📊';
-    return '📎';
-  };
-
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
-  return (
-    <a
-      href={attachment.file_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors group"
-    >
-      <div className="flex items-center gap-3">
-        <div className="text-2xl">{getFileIcon(attachment.file_type)}</div>
-        <div>
-          <div className="font-medium text-gray-900 group-hover:text-blue-600 transition-colors">
-            {attachment.file_name}
-          </div>
-          <div className="text-sm text-gray-500">
-            {formatFileSize(attachment.file_size)} • {attachment.file_type?.split('/')[1] || 'File'}
-          </div>
-        </div>
-      </div>
-      <Download size={16} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
-    </a>
-  );
-}
+import ClientProfileModal from "../components/ClientProfileModal";
 
 function ClientsPage() {
   const { currentStaff } = useUser();
@@ -292,7 +254,7 @@ function ClientsPage() {
 
 if (loading) {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+    <div className="min-h-dvh bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin shadow-xl"></div>
         <div className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] animate-pulse">LOADING CLIENTS DATA...</div>
@@ -697,124 +659,14 @@ if (loading) {
       </div>
 
       {/* Client Info Modal */}
-      {selectedClient && showInfoModal && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col border border-slate-100">
-            {/* Modal Header */}
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 backdrop-blur-md">
-              <div className="flex items-center gap-4">
-                {selectedClient.profile_photo_url ? (
-                  <img
-                    src={selectedClient.profile_photo_url}
-                    alt={`${selectedClient.first_name}`} 
-                    className="rounded-2xl h-14 w-14 object-cover border-2 border-white shadow-sm"
-                  />
-                ) : (
-                  <div className="rounded-2xl h-14 w-14 flex items-center justify-center bg-blue-600 text-white font-black text-lg shadow-lg shadow-blue-200">
-                    {selectedClient.first_name[0]}{selectedClient.last_name[0]}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <h2 className="text-lg font-black text-slate-900 uppercase tracking-tight truncate leading-tight">
-                    {selectedClient.first_name} {selectedClient.last_name}
-                  </h2>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Registry Profile</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setShowInfoModal(false);
-                  setSelectedClient(null);
-                }}
-                className="p-2.5 bg-white text-slate-400 hover:text-slate-600 rounded-xl border border-slate-100 transition-all shadow-sm"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-8 overflow-y-auto custom-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Personal File</h3>
-                    <div className="space-y-3">
-                      <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Formal Age</span>
-                        <span className="text-[11px] font-black text-slate-900 uppercase">{calculateAge(selectedClient.date_of_birth)} YRS</span>
-                      </div>
-                      <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Birth Date</span>
-                        <span className="text-[11px] font-black text-slate-900 uppercase">{formatDate(selectedClient.date_of_birth)}</span>
-                      </div>
-                      <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-                        <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">NDIS Number</span>
-                        <span className="text-[11px] font-black text-slate-900 uppercase font-mono">{selectedClient.ndis_number || 'PENDING'}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Support Directives</h3>
-                    <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                      <p className="text-[11px] font-black text-slate-400 uppercase tracking-wider mb-2">Primary Goals</p>
-                      <p className="text-[11px] font-bold text-slate-600 leading-relaxed">{selectedClient.goals_summary || 'No directives recorded'}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">Communication</h3>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-2xl">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Phone size={14}/></div>
-                        <div>
-                          <p className="text-[8px] font-black text-slate-300 uppercase leading-none mb-1">Mobile</p>
-                          <p className="text-[11px] font-black text-slate-900 uppercase">{selectedClient.phone_number || 'UNLISTED'}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 p-3 bg-white border border-slate-100 rounded-2xl">
-                        <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Mail size={14}/></div>
-                        <div className="min-w-0">
-                          <p className="text-[8px] font-black text-slate-300 uppercase leading-none mb-1">Email</p>
-                          <p className="text-[11px] font-black text-slate-900 truncate uppercase">{selectedClient.email || 'UNLISTED'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="text-[10px] font-black text-blue-600 uppercase tracking-[0.2em] mb-4">NDIS Documentation</h3>
-                    {selectedClient.file ? (
-                      <AttachmentItem attachment={selectedClient.file} />
-                    ) : (
-                      <div className="flex items-center gap-3 p-4 border border-dashed border-slate-200 rounded-2xl text-slate-300">
-                        <FileText size={16}/>
-                        <span className="text-[10px] font-black uppercase tracking-widest">No plan attached</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-100 bg-slate-50/30 flex justify-end gap-3">
-              <button
-                onClick={() => setShowInfoModal(false)}
-                className="px-6 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600 transition-all"
-              >
-                Dismiss
-              </button>
-              <Link
-                to={`/edit-client/${selectedClient.id}`}
-                className="px-6 py-2.5 bg-blue-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-blue-100 hover:bg-blue-700 transition-all"
-              >
-                Modify Profile
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+      <ClientProfileModal 
+        isOpen={showInfoModal} 
+        onClose={() => {
+          setShowInfoModal(false);
+          setSelectedClient(null);
+        }} 
+        client={selectedClient} 
+      />
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedClient && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in zoom-in duration-300">
