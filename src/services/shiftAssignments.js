@@ -21,8 +21,7 @@ export const assignStaffToShift = async (shiftId, staffIds, assignedBy = null, o
             shift_id: shiftId,
             staff_id: staffId,
             assigned_by: assignedBy,
-            assigned_at: new Date().toISOString(),
-            tenant_id: options?.tenant_id
+            assigned_at: new Date().toISOString()
         }));
 
         const { data, error } = await supabase
@@ -60,8 +59,7 @@ export const assignStaffToShifts = async (shiftIds, staffIds, assignedBy = null,
                     shift_id: shiftId,
                     staff_id: staffId,
                     assigned_by: assignedBy,
-                    assigned_at: new Date().toISOString(),
-                    tenant_id: options?.tenant_id
+                    assigned_at: new Date().toISOString()
                 });
             }
         }
@@ -91,8 +89,7 @@ export const removeStaffFromShift = async (shiftId, staffId, options = {}) => {
             .from('shift_staff_assignments')
             .delete()
             .eq('shift_id', shiftId)
-            .eq('staff_id', staffId)
-            .eq('tenant_id', options?.tenant_id);
+            .eq('staff_id', staffId);
 
         if (error) throw error;
 
@@ -222,9 +219,9 @@ export const copyShiftToStaff = async (sourceShiftId, targetStaffIds, options = 
             end_time: sourceShift.end_time,
             break_minutes: sourceShift.break_minutes,
             shift_type_id: sourceShift.shift_type_id,
-            status: options.status || 'scheduled', // Default to scheduled/draft
+            status: options.status || 'scheduled',
             created_at: new Date().toISOString(),
-            tenant_id: options.tenant_id
+            updated_at: new Date().toISOString()
         }));
 
         const { data: createdShifts, error: createError } = await supabase
@@ -239,8 +236,7 @@ export const copyShiftToStaff = async (sourceShiftId, targetStaffIds, options = 
             shift_id: shift.id,
             staff_id: shift.staff_id,
             assigned_by: options.assignedBy,
-            assigned_at: new Date().toISOString(),
-            tenant_id: options.tenant_id
+            assigned_at: new Date().toISOString()
         }));
 
         await supabase
@@ -267,8 +263,7 @@ export const replaceShiftStaff = async (shiftId, staffIds, assignedBy = null, op
         await supabase
             .from('shift_staff_assignments')
             .delete()
-            .eq('shift_id', shiftId)
-            .eq('tenant_id', options?.tenant_id);
+            .eq('shift_id', shiftId);
 
         // Add new assignments
         if (staffIds && staffIds.length > 0) {

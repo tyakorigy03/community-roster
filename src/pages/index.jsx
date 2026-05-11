@@ -191,13 +191,16 @@ function Index() {
           id,
           first_name,
           last_name,
-          documents!left(id, document_type)
+          documents(id, document_type)
         `)
         .eq('is_active', true)
         .eq('tenant_id', currentStaff.tenant_id);
 
       const clientsMissingDocs = (allClientsData || [])
-        .filter(c => !c.documents?.some(d => d.document_type === 'NDIS_PLAN'))
+        .filter(c => {
+          const docs = Array.isArray(c.documents) ? c.documents : (c.documents ? [c.documents] : []);
+          return !docs.some(d => d.document_type === 'NDIS_PLAN');
+        })
         .map(c => ({
           id: c.id,
           name: `${c.first_name} ${c.last_name}`,

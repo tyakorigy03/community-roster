@@ -964,26 +964,18 @@ export default function WeeklyRoster() {
       }
 
       // Call the edge function
-      const response = await fetch(
-        `https://lyuhhztaemndephpgjaj.supabase.co/functions/v1/publish-roster`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            // 'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-          body: JSON.stringify({
-            startDate: weekDates[0],
-            endDate: weekDates[6],
-            tenant_id: currentStaff.tenant_id
-          })
+      const { data, error: functionError } = await supabase.functions.invoke('publish-roster', {
+        body: {
+          startDate: weekDates[0],
+          endDate: weekDates[6],
+          tenant_id: currentStaff.tenant_id
         }
-      );
-      const data = await response.json();
+      });
+
       toast.dismiss(loadingToast);
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to publish roster');
+      if (functionError) {
+        throw new Error(functionError.message || 'Failed to publish roster');
       }
       toast.success(
         `${data.message}\n${data.emailsSent} email${data.emailsSent !== 1 ? 's' : ''} sent successfully!`,

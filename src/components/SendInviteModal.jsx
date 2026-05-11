@@ -3,9 +3,9 @@ import React, { useState } from "react";
 import { useUser } from "../context/UserContext";
 import { X, Send, Mail, ShieldCheck, AlertCircle, ChevronRight, Fingerprint } from "lucide-react";
 import { toast } from "react-toastify";
+import { supabase } from "../lib/supabase";
 
-const EDGE_FUNCTION_URL =
-  "https://lyuhhztaemndephpgjaj.supabase.co/functions/v1/create_user";
+const EDGE_FUNCTION_NAME = "create_user";
 
 function SendInviteModal({ staff, onClose }) {
   const { currentStaff } = useUser();
@@ -15,22 +15,18 @@ function SendInviteModal({ staff, onClose }) {
     try {
       setLoading(true);
 
-      const res = await fetch(EDGE_FUNCTION_URL, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const { data, error: functionError } = await supabase.functions.invoke(EDGE_FUNCTION_NAME, {
+        body: {
           staff_id: staff.id,
           email: staff.email,
           name: staff.name,
           tenant_id: currentStaff?.tenant_id,
-        }),
+        },
       });
 
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error || "Failed to send invite");
+      if (functionError) {
+        // If it's a Supabase error object, it might have a message property
+        throw new Error(functionError.message || JSON.stringify(functionError));
       }
 
       toast.success(`Invitation sent to ${staff.name}`);
