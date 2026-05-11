@@ -36,6 +36,7 @@ jobs:
           sed -i '' 's/PRODUCT_BUNDLE_IDENTIFIER = .*/PRODUCT_BUNDLE_IDENTIFIER = com.blessingcommunity.app;/g' ios/App/App.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = ""/DEVELOPMENT_TEAM = MJW2ZG6ZLH/g' ios/App/App.xcodeproj/project.pbxproj
           sed -i '' 's/DEVELOPMENT_TEAM = ;/DEVELOPMENT_TEAM = MJW2ZG6ZLH;/g' ios/App/App.xcodeproj/project.pbxproj
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString 1.1" ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSCameraUsageDescription string 'This app needs camera access to capture photos for clock-in verification'" ios/App/App/Info.plist
           /usr/libexec/PlistBuddy -c "Add :NSLocationWhenInUseUsageDescription string 'This app needs your location to verify clock-in and clock-out at the correct site'" ios/App/App/Info.plist

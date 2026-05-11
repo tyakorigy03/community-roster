@@ -981,6 +981,10 @@ export default function WeeklyRoster() {
         `${data.message}\n${data.emailsSent} email${data.emailsSent !== 1 ? 's' : ''} sent successfully!`,
         { duration: 5000 }
       );
+
+      // Refresh the view to show live statuses
+      await fetchData();
+
       if (data.errors && data.errors.length > 0) {
         toast.warning(
           `${data.errors.length} email${data.errors.length !== 1 ? 's' : ''} failed to send. Check console for details.`,
